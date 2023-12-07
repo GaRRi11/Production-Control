@@ -10,6 +10,11 @@ namespace Production_Controll
     {
         public long LocationID { get; set; }
         public string City { get; set; }
-        
+
+        public Location(long locationID, string city)
+        {
+            LocationID = locationID;
+            City = city;
+        }
     }
 }

@@ -4,19 +4,16 @@
     {
         public long id { get; set; }
         public string name { get; set; }
-        public double liters { get; set; }
-        public string version { get; set; }
+        public long litersId { get; set; }
 
         public ProductType(
             long id,
             string name,
-            string version,
-            double liters)
+            long litersId)
         {
             this.id = id;
             this.name = name;
-            this.liters = liters;
-            this.version = version;
+            this.litersId = litersId;
         }
     }
 }
