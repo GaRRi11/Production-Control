@@ -88,6 +88,7 @@
             excelBtn.Size = new Size(50, 31);
             excelBtn.TabIndex = 9;
             excelBtn.UseVisualStyleBackColor = true;
+            excelBtn.Click += excelBtn_Click;
             // 
             // Form1
             // 
@@ -99,14 +100,13 @@
             Controls.Add(tabControl1);
             Name = "Form1";
             Text = "Form1";
-            Load += Form1_Load;
             tabControl1.ResumeLayout(false);
             ResumeLayout(false);
         }
 
         #endregion
 
-        private TabControl tabControl1;
+        public TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;
         private Button excelBtn;

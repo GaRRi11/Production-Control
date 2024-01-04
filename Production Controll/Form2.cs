@@ -16,6 +16,7 @@ namespace Production_Controll
         public Form2()
         {
             InitializeComponent();
+            this.AcceptButton = button1;
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -23,11 +24,18 @@ namespace Production_Controll
             this.Size = new Size(407, 247);
         }
 
+        
+
         private void button1_Click(object sender, EventArgs e)
         {
-            if(textBox1.Text.Length > 30)
+            if (textBox1.Text.Length > 30)
             {
                 MessageBox.Show("too long name");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(textBox1.Text))
+            {
+                MessageBox.Show("type the name of product");
                 return;
             }
             productName = textBox1.Text;

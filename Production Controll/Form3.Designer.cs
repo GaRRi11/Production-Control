@@ -32,11 +32,11 @@
             label1 = new Label();
             textBox1 = new TextBox();
             excelBtn = new Button();
-            radioButton1 = new RadioButton();
-            radioButton2 = new RadioButton();
-            Save = new Button();
-            button2 = new Button();
-            productName = new Label();
+            additionRadio = new RadioButton();
+            substractionRadio = new RadioButton();
+            savebtn = new Button();
+            deletebtn = new Button();
+            productNameLabel = new Label();
             SuspendLayout();
             // 
             // label1
@@ -48,7 +48,6 @@
             label1.Size = new Size(78, 20);
             label1.TabIndex = 0;
             label1.Text = "Quantity: ";
-            label1.Click += label1_Click;
             // 
             // textBox1
             // 
@@ -66,71 +65,72 @@
             excelBtn.TabIndex = 10;
             excelBtn.UseVisualStyleBackColor = true;
             // 
-            // radioButton1
+            // additionRadio
             // 
-            radioButton1.AutoSize = true;
-            radioButton1.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            radioButton1.Location = new Point(37, 121);
-            radioButton1.Name = "radioButton1";
-            radioButton1.Size = new Size(91, 24);
-            radioButton1.TabIndex = 11;
-            radioButton1.TabStop = true;
-            radioButton1.Text = "Addition";
-            radioButton1.UseVisualStyleBackColor = true;
+            additionRadio.AutoSize = true;
+            additionRadio.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            additionRadio.Location = new Point(37, 121);
+            additionRadio.Name = "additionRadio";
+            additionRadio.Size = new Size(91, 24);
+            additionRadio.TabIndex = 11;
+            additionRadio.TabStop = true;
+            additionRadio.Text = "Addition";
+            additionRadio.UseVisualStyleBackColor = true;
             // 
-            // radioButton2
+            // substractionRadio
             // 
-            radioButton2.AutoSize = true;
-            radioButton2.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            radioButton2.Location = new Point(37, 163);
-            radioButton2.Name = "radioButton2";
-            radioButton2.Size = new Size(118, 24);
-            radioButton2.TabIndex = 12;
-            radioButton2.TabStop = true;
-            radioButton2.Text = "Substraction";
-            radioButton2.UseVisualStyleBackColor = true;
+            substractionRadio.AutoSize = true;
+            substractionRadio.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            substractionRadio.Location = new Point(37, 163);
+            substractionRadio.Name = "substractionRadio";
+            substractionRadio.Size = new Size(118, 24);
+            substractionRadio.TabIndex = 12;
+            substractionRadio.TabStop = true;
+            substractionRadio.Text = "Substraction";
+            substractionRadio.UseVisualStyleBackColor = true;
             // 
-            // Save
+            // savebtn
             // 
-            Save.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
-            Save.Location = new Point(341, 200);
-            Save.Name = "Save";
-            Save.Size = new Size(99, 45);
-            Save.TabIndex = 13;
-            Save.Text = "Save";
-            Save.UseVisualStyleBackColor = true;
+            savebtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
+            savebtn.Location = new Point(341, 200);
+            savebtn.Name = "savebtn";
+            savebtn.Size = new Size(99, 45);
+            savebtn.TabIndex = 13;
+            savebtn.Text = "Save";
+            savebtn.UseVisualStyleBackColor = true;
+            savebtn.Click += savebtn_Click;
             // 
-            // button2
+            // deletebtn
             // 
-            button2.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
-            button2.Location = new Point(218, 200);
-            button2.Name = "button2";
-            button2.Size = new Size(99, 45);
-            button2.TabIndex = 14;
-            button2.Text = "Delete Product";
-            button2.UseVisualStyleBackColor = true;
+            deletebtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
+            deletebtn.Location = new Point(218, 200);
+            deletebtn.Name = "deletebtn";
+            deletebtn.Size = new Size(99, 45);
+            deletebtn.TabIndex = 14;
+            deletebtn.Text = "Delete Product";
+            deletebtn.UseVisualStyleBackColor = true;
+            deletebtn.Click += deletebtn_Click;
             // 
-            // productName
+            // productNameLabel
             // 
-            productName.AutoSize = true;
-            productName.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            productName.Location = new Point(47, 30);
-            productName.Name = "productName";
-            productName.Size = new Size(51, 20);
-            productName.TabIndex = 15;
-            productName.Text = "label2";
-            productName.Click += productName_Click;
+            productNameLabel.AutoSize = true;
+            productNameLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            productNameLabel.Location = new Point(47, 30);
+            productNameLabel.Name = "productNameLabel";
+            productNameLabel.Size = new Size(51, 20);
+            productNameLabel.TabIndex = 15;
+            productNameLabel.Text = "label2";
             // 
             // Form3
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(452, 257);
-            Controls.Add(productName);
-            Controls.Add(button2);
-            Controls.Add(Save);
-            Controls.Add(radioButton2);
-            Controls.Add(radioButton1);
+            Controls.Add(productNameLabel);
+            Controls.Add(deletebtn);
+            Controls.Add(savebtn);
+            Controls.Add(substractionRadio);
+            Controls.Add(additionRadio);
             Controls.Add(excelBtn);
             Controls.Add(textBox1);
             Controls.Add(label1);
@@ -145,10 +145,10 @@
         private Label label1;
         private TextBox textBox1;
         private Button excelBtn;
-        private RadioButton radioButton1;
-        private RadioButton radioButton2;
-        private Button Save;
-        private Button button2;
-        private Label productName;
+        private RadioButton additionRadio;
+        private RadioButton substractionRadio;
+        private Button savebtn;
+        private Button deletebtn;
+        private Label productNameLabel;
     }
 }
