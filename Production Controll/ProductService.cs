@@ -1,87 +1,111 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using static Production_Controll.Product;
 
 namespace Production_Controll
 {
     public class ProductService
     {
-        private static List<Product> Products = new List<Product>(); // Simulating storage
+        private readonly DatabaseManager dbManager;
+        private readonly ModificationService modificationService;
+
+        public ProductService()
+        {
+            dbManager = new DatabaseManager();
+            modificationService = new ModificationService();
+        }
 
         public Product CreateProduct(Product product)
         {
-            Products.Add(product);
+            string query = $"INSERT INTO products (id, name, city, quantity, lastModified) " +
+                           $"VALUES ('{product.id}', '{product.name}', '{product.city}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
+            dbManager.ExecuteNonQuery(query);
+            RecordModification(product.id, Modification.Operation.Add, 0);
             return product;
         }
 
-        public DateTime getLastModifiedDate(long productId)
+        public DateTime GetLastModifiedDate(long productId)
         {
-            return GetProductById(productId).LastModified;
+            string query = $"SELECT lastModified FROM products WHERE id = {productId};";
+            var result = dbManager.ExecuteQuery(query);
+
+            if (result.Count > 0 && result[0].ContainsKey("lastModified"))
+            {
+                return Convert.ToDateTime(result[0]["lastModified"]);
+            }
+
+            return DateTime.MinValue;
         }
 
-        public int getQuantityById(long productId)
+        public int GetQuantityById(long productId)
         {
-            return GetProductById(productId).quantity;
+            string query = $"SELECT quantity FROM products WHERE id = {productId};";
+            var result = dbManager.ExecuteQuery(query);
+
+            return result.Count > 0 && result[0].ContainsKey("quantity") ? Convert.ToInt32(result[0]["quantity"]) : -1;
         }
 
         public Product GetProductById(long id)
         {
-            foreach (var product in Products)
-            {
-                if (product.id == id)
-                {
-                    return product;
-                }
-            }
-            return null;
+            string query = $"SELECT * FROM products WHERE id = {id};";
+            var result = dbManager.ExecuteQuery(query);
+
+            return result.Count > 0 ? ExtractProductFromResult(result[0]) : null;
         }
 
-        public string getProductNameById(long id)
+        private Product ExtractProductFromResult(Dictionary<string, object> result)
         {
-            return GetProductById(id).name;
+            return new Product(
+                Convert.ToInt64(result["id"]),
+                result["name"].ToString(),
+                (Product.City)Enum.Parse(typeof(Product.City), result["city"].ToString()),
+                Convert.ToInt32(result["quantity"]),
+                Convert.ToDateTime(result["lastModified"])
+            );
+        }
+
+        public string GetProductNameById(long id)
+        {
+            var product = GetProductById(id);
+            return product != null ? product.name : string.Empty;
         }
 
         public void AddQuantity(long id, int amount)
         {
-            var product = GetProductById(id);
-            if (product != null && amount > 0)
-            {
-                product.AddQuantity(amount);
-            }
+            string query = $"UPDATE products SET quantity = quantity + {amount} WHERE id = {id};";
+            dbManager.ExecuteNonQuery(query);
+            RecordModification(id, Modification.Operation.Addition, amount);
         }
 
         public void SubtractQuantity(long id, int amount)
         {
-            var product = GetProductById(id);
-            if (product != null && amount > 0 && amount <= product.quantity)
-            {
-                product.SubtractQuantity(amount);
-            }
+            string query = $"UPDATE products SET quantity = GREATEST(quantity - {amount}, 0) WHERE id = {id};";
+            dbManager.ExecuteNonQuery(query);
+            RecordModification(id, Modification.Operation.Substraction, amount);
         }
 
-        public bool checkQuantityForSubstraction(long id,int amount)
+        public bool CheckQuantityForSubtraction(long id, int amount)
         {
-            var product = GetProductById(id);
-            if (product.quantity >= amount)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+            string query = $"SELECT quantity >= {amount} AS result FROM products WHERE id = {id};";
+            var result = dbManager.ExecuteQuery(query);
 
+            return result.Count > 0 && result[0].ContainsKey("result") && Convert.ToBoolean(result[0]["result"]);
+        }
 
         public bool DeleteProduct(long id)
         {
-            var productToRemove = GetProductById(id);
-            if (productToRemove != null)
-            {
-                Products.Remove(productToRemove);
-                return true;
-            }
+            string query = $"DELETE FROM products WHERE id = {id};";
+            dbManager.ExecuteNonQuery(query);
+            // Handle checks and return accordingly
             return false;
+        }
+
+        private void RecordModification(long id, Modification.Operation operationType, int quantityChanged)
+        {
+            string updateQuery = $"UPDATE products SET LastModified = NOW() WHERE id = {id};";
+            dbManager.ExecuteNonQuery(updateQuery);
+
+            Modification modification = new Modification(id, operationType, quantityChanged, DateTime.Now);
+            modificationService.SaveModification(modification);
         }
     }
 }

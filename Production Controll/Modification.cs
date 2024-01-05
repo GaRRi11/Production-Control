@@ -10,16 +10,16 @@ namespace Production_Controll
 {
     public class Modification
     {
-        private long id {  get; set; }
+        public long id {  get; set; }
 
         //@manytoone
-        private long productId { get; set; }
+        public long productId { get; set; }
 
-        private Operation operation { get; set; }
+        public Operation operation { get; set; }
 
-        private int quantity { get; set; }
+        public int quantity { get; set; }
 
-        private DateTime date { get; set; }
+        public DateTime date { get; set; }
 
 
         public static long lastId = 0;

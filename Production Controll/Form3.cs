@@ -24,7 +24,7 @@ namespace Production_Controll
             this.parentForm = parent;
             this.selectedPanel = selectedPanel;
             this.productService = new ProductService();
-            this.productNameLabel.Text = productService.getProductNameById(productId);
+            this.productNameLabel.Text = productService.GetProductNameById(productId);
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -59,7 +59,7 @@ namespace Production_Controll
 
              if (operation == Modification.Operation.Substraction)
             {
-                if (!productService.checkQuantityForSubstraction(productId, quantity))
+                if (!productService.CheckQuantityForSubtraction(productId, quantity))
                 {
                     MessageBox.Show("type valid number");
                     return;
@@ -77,8 +77,8 @@ namespace Production_Controll
         {
             if (panelToUpdate != null)
             {
-                string date = productService.getLastModifiedDate(productId).ToString();
-                int quantity = productService.getQuantityById(productId);
+                string date = productService.GetLastModifiedDate(productId).ToString();
+                int quantity = productService.GetQuantityById(productId);
 
                 UpdateLabel(panelToUpdate, "quantityLabel", "რაოდენობა: " + quantity);
                 UpdateLabel(panelToUpdate, "centerLabel", "ბოლო რედ." + date);

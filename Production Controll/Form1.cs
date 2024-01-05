@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using OfficeOpenXml;
+using MySql.Data.MySqlClient;
 
 namespace Production_Controll
 {
@@ -14,11 +15,22 @@ namespace Production_Controll
         private const int panelMargin = 10;
         private const string ProductPanelName = "productPanel";
 
-        private ProductService ProductService = new ProductService();
+        private ProductService ProductService;
+        private DatabaseManager DatabaseManager;
 
         public Form1()
         {
             InitializeComponent();
+            this.FormClosing += Form1_FormClosing; // Subscribe to the FormClosing event
+            this.ProductService = new ProductService();
+            this.DatabaseManager = new DatabaseManager();
+            DatabaseManager.InitializeDB();
+
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            DatabaseManager.DropTables();
         }
 
         private void panelMouseEnterAndLeave(object sender, bool enter)
@@ -177,13 +189,34 @@ namespace Production_Controll
 
             //GenerateExcel();
 
-            using (var context = new MyDbContext())
+            //using (var context = new MyDbContext())
+            //{
+            //    var product = new Product("Example Product", Product.City.TBILISI);
+            //    product.AddQuantity(10); // Adding quantity
+            //    context.Products.Add(product);
+            //    context.SaveChanges(); // Save changes to the database
+            //}
+            try
             {
-                var product = new Product("Example Product", Product.City.TBILISI);
-                product.AddQuantity(10); // Adding quantity
-                context.Products.Add(product);
-                context.SaveChanges(); // Save changes to the database
+                string connstring = "server=localhost;uid=root;pwd=garomysql1852;database=studentdb";
+                MySqlConnection conn = new MySqlConnection();
+                conn.ConnectionString = connstring;
+                conn.Open();
+                string sql = "select * from student";
+                MySqlCommand cmd = new MySqlCommand(sql, conn);
+                MySqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    MessageBox.Show("name " + dr["NAME"]);
+                }
+            }catch (Exception ex)
+            {
+
             }
+
+
+
+
         }
     }
 }

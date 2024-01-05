@@ -22,7 +22,7 @@ namespace Production_Controll
             productPanel.Name = productName;
 
             Label nameLabel = createLabel(productName, new Point(10, 10));
-            Label centerLabel = createLabel("ბოლო რედ." + product.LastModified, Point.Empty); // Initialize centerLabel
+            Label centerLabel = createLabel("ბოლო რედ." + product.lastModified, Point.Empty); // Initialize centerLabel
             centerLabel.Name = "centerLabel";
             // Calculate the size of centerLabel
             centerLabel.AutoSize = true;

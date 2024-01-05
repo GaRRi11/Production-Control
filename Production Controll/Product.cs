@@ -14,10 +14,9 @@ namespace Production_Controll
         public string name { get; set; }
         public City city { get; set; }
         public int quantity { get; set; }
-        public DateTime LastModified { get; set; }
+        public DateTime lastModified { get; set; }
 
-        public static long lastId = 0;
-        public List<Modification> Modifications { get; set; }
+        public static long lastId = 5;
 
         public enum City
         {
@@ -36,74 +35,16 @@ namespace Production_Controll
             this.name = name;
             this.city = city;
             this.quantity = 0;
-            RecordModification(Modification.Operation.Add, 0);
+            this.lastModified = DateTime.Now;
         }
 
-        public List<Product> Products = new List<Product>();
-        public void AddProduct(Product product)
+        public Product(long id, string name, City city, int quantity, DateTime lastModified)
         {
-            Products.Add(product);
+            this.id = id;
+            this.name = name;
+            this.city = city;
+            this.quantity = quantity;
+            this.lastModified = lastModified;
         }
-
-        public Product GetProductById(long id)
-        {
-            foreach (var product in Products)
-            {
-                if (product.id == id)
-                {
-                    return product;
-                }
-            }
-            return null;
-        }
-
-        public void AddQuantity(int amount)
-        {
-            if (amount > 0) // Ensure we're adding a positive quantity
-            {
-                quantity += amount; 
-                RecordModification(Modification.Operation.Addition, amount);
-            }
-            else {
-                MessageBox.Show("Type valid number");
-            }
-        }
-
-        // Method to subtract quantity
-        public void SubtractQuantity(int amount)
-        {
-            if (amount > 0 && amount <= quantity) // Ensure valid amount to subtract
-            {
-                quantity -= amount;
-                RecordModification(Modification.Operation.Substraction, amount);
-            }
-            else {
-                MessageBox.Show("Type valid number");
-            }
-        }
-
-        private void RecordModification(Modification.Operation operationType, int quantityChanged)
-        {
-            if (Modifications == null)
-            {
-                Modifications = new List<Modification>();
-            }
-
-            LastModified = DateTime.Now;
-
-            Modification modification = new Modification(this.id,operationType,quantityChanged,DateTime.Now);
-
-            Modifications.Add(modification);
-            
-        }
-
-
-
-
-
-        //  public void RemoveProduct(Product product) { }
-
-
-
     }
 }

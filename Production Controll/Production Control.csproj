@@ -10,8 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\GariE\.nuget\packages\mysql.data.entityframework\8.2.0\contentFiles\any\netstandard2.1\app.config.transform" />
+    <Content Remove="C:\Users\GariE\.nuget\packages\mysql.data.entityframework\8.2.0\contentFiles\any\netstandard2.1\web.config.transform" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="EntityFramework" Version="6.4.4" />
     <PackageReference Include="EPPlus" Version="7.0.5" />
+    <PackageReference Include="MySql.Data" Version="8.2.0" />
+    <PackageReference Include="MySql.Data.EntityFramework" Version="8.2.0" />
   </ItemGroup>
 
   <ItemGroup>
