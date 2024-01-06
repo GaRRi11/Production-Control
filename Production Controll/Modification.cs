@@ -38,9 +38,10 @@ namespace Production_Controll
         }
 
         public enum Operation{
-            Add,
+            CREATE,
             Addition,
-            Substraction
+            Substraction,
+            DELETE
         }
     }
 }

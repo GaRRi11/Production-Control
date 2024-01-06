@@ -51,5 +51,32 @@ namespace Production_Controll
 
             return allModifications;
         }
+
+        public List<Modification> GetAllModificationsById(long productId)
+        {
+            string query = $"SELECT * FROM modifications WHERE productId = {productId};";
+            var result = dbManager.ExecuteQuery(query);
+
+            List<Modification> modifications = new List<Modification>();
+
+            foreach (var row in result)
+            {
+                if (row.TryGetValue("operationType", out var operationTypeObj) &&
+                    row.TryGetValue("quantityChanged", out var quantityObj) &&
+                    row.TryGetValue("date", out var dateObj))
+                {
+                    Modification.Operation operation = (Modification.Operation)Enum.Parse(typeof(Modification.Operation), operationTypeObj.ToString());
+                    int quantity = Convert.ToInt32(quantityObj);
+                    DateTime date = Convert.ToDateTime(dateObj);
+
+                    Modification modification = new Modification(productId, operation, quantity, date);
+                    modifications.Add(modification);
+                }
+                // Handle else condition/logic if required for incomplete rows.
+            }
+
+            return modifications;
+        }
+
     }
 }

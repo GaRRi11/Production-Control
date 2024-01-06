@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OfficeOpenXml;
+using System;
 using System.Windows.Forms;
 
 namespace Production_Controll
@@ -7,6 +8,8 @@ namespace Production_Controll
     {
         private long productId;
         private ProductService productService;
+        private ModificationService modificationService;
+
         private Form1 parentForm;
         private Panel selectedPanel;
 
@@ -24,6 +27,7 @@ namespace Production_Controll
             this.parentForm = parent;
             this.selectedPanel = selectedPanel;
             this.productService = new ProductService();
+            this.modificationService = new ModificationService();
             this.productNameLabel.Text = productService.GetProductNameById(productId);
         }
 
@@ -57,7 +61,7 @@ namespace Production_Controll
                 ? Modification.Operation.Addition
                 : Modification.Operation.Substraction;
 
-             if (operation == Modification.Operation.Substraction)
+            if (operation == Modification.Operation.Substraction)
             {
                 if (!productService.CheckQuantityForSubtraction(productId, quantity))
                 {
@@ -66,38 +70,23 @@ namespace Production_Controll
                 }
             }
 
-
-            parentForm.UpdateProductQuantity(productId, operation, quantity);
-            UpdateLabels(selectedPanel);
+            this.UpdateProductQuantity(productId, operation, quantity);
+            this.UpdateLabels(selectedPanel,productId);
 
             this.Close();
-        }
-
-        private void UpdateLabels(Panel panelToUpdate)
-        {
-            if (panelToUpdate != null)
-            {
-                string date = productService.GetLastModifiedDate(productId).ToString();
-                int quantity = productService.GetQuantityById(productId);
-
-                UpdateLabel(panelToUpdate, "quantityLabel", "რაოდენობა: " + quantity);
-                UpdateLabel(panelToUpdate, "centerLabel", "ბოლო რედ." + date);
-            }
-        }
-
-        private void UpdateLabel(Panel panel, string labelName, string newText)
-        {
-            Control[] labels = panel.Controls.Find(labelName, true);
-            if (labels.Length > 0 && labels[0] is Label label)
-            {
-                label.Text = newText;
-            }
         }
 
         private void deletebtn_Click(object sender, EventArgs e)
         {
             parentForm.DeletePanel();
+            productService.DeleteProduct(productId);
             this.Close();
         }
+
+        private void excelBtn_Click(object sender, EventArgs e)
+        {
+            this.GenerateExcelForOne(productId);
+        }
+
     }
 }

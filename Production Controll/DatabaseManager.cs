@@ -14,7 +14,7 @@ namespace Production_Controll
                 CREATE TABLE IF NOT EXISTS production_control.products (
                 id BIGINT NOT NULL,
                 name VARCHAR(255) NOT NULL,
-                city ENUM('TBILISI', 'KUTAISI') NOT NULL,
+                city VARCHAR(255) NOT NULL,
                 quantity INT NOT NULL,
                 lastModified DATETIME NOT NULL,
                 PRIMARY KEY (id));";

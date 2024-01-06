@@ -64,6 +64,7 @@
             excelBtn.Size = new Size(50, 31);
             excelBtn.TabIndex = 10;
             excelBtn.UseVisualStyleBackColor = true;
+            excelBtn.Click += excelBtn_Click;
             // 
             // additionRadio
             // 

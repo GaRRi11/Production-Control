@@ -19,7 +19,7 @@ namespace Production_Controll
             string query = $"INSERT INTO products (id, name, city, quantity, lastModified) " +
                            $"VALUES ('{product.id}', '{product.name}', '{product.city}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
             dbManager.ExecuteNonQuery(query);
-            RecordModification(product.id, Modification.Operation.Add, 0);
+            RecordModification(product.id, Modification.Operation.CREATE, 0);
             return product;
         }
 
@@ -42,6 +42,20 @@ namespace Production_Controll
             var result = dbManager.ExecuteQuery(query);
 
             return result.Count > 0 && result[0].ContainsKey("quantity") ? Convert.ToInt32(result[0]["quantity"]) : -1;
+        }
+
+        public string GetCityById(long productId)
+        {
+            string query = $"SELECT city FROM products WHERE id = {productId}";
+            var result = dbManager.ExecuteQuery(query);
+
+            if (result.Count > 0 && result[0].ContainsKey("city"))
+            {
+                // Assuming the city column is a string type in the database
+                return result[0]["city"].ToString();
+            }
+
+            return null;
         }
 
         public Product GetProductById(long id)

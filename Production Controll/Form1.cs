@@ -97,6 +97,7 @@ namespace Production_Controll
             {
                 form2.ShowDialog();
                 string productName = form2.productName;
+
                 if (!string.IsNullOrEmpty(productName))
                 {
                     AddProductPanel(productName);
@@ -104,17 +105,7 @@ namespace Production_Controll
             }
         }
 
-        public void UpdateProductQuantity(long productId, Modification.Operation operation, int quantity)
-        {
-            if (operation == Modification.Operation.Addition)
-            {
-                ProductService.AddQuantity(productId, quantity);
-            }
-            else if (operation == Modification.Operation.Substraction)
-            {
-                ProductService.SubtractQuantity(productId, quantity);
-            }
-        }
+
 
         public void DeletePanel()
         {
@@ -138,84 +129,11 @@ namespace Production_Controll
             }
         }
 
-
-        //private void GenerateExcel()
-        //{
-        //    using (ExcelPackage excelPackage = new ExcelPackage())
-        //    {
-        //        ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("ProductInfo");
-
-        //        // Headers
-        //        worksheet.Cells[1, 1].Value = "Product Name";
-        //        worksheet.Cells[1, 2].Value = "Last Modified";
-        //        worksheet.Cells[1, 3].Value = "Quantity";
-
-        //        int row = 2; // Start from the second row for data
-
-        //        foreach (Control control in tabControl1.SelectedTab.Controls)
-        //        {
-        //            if (control is Panel panel && control.Name == ProductPanelName && control.Tag is Product product)
-        //            {
-        //                // Extracting product information
-        //                string productName = product.name;
-        //                string lastModified = ProductService.getLastModifiedDate(product.id).ToString();
-        //                int quantity = ProductService.getQuantityById(product.id);
-
-        //                // Writing product information to Excel
-        //                worksheet.Cells[row, 1].Value = productName;
-        //                worksheet.Cells[row, 2].Value = lastModified;
-        //                worksheet.Cells[row, 3].Value = quantity;
-
-        //                row++;
-        //            }
-        //        }
-
-        //        // Save the Excel file
-        //        string fileName = "ProductInfo.xlsx";
-        //        FileInfo excelFile = new FileInfo(fileName);
-        //        excelPackage.SaveAs(excelFile);
-
-        //        // Open the Excel file
-        //        if (excelFile.Exists)
-        //        {
-        //            System.Diagnostics.Process.Start(fileName);
-        //        }
-        //    }
-        //}
-
+        
         private void excelBtn_Click(object sender, EventArgs e)
         {
-            // ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // Set the license context
 
-            //GenerateExcel();
-
-            //using (var context = new MyDbContext())
-            //{
-            //    var product = new Product("Example Product", Product.City.TBILISI);
-            //    product.AddQuantity(10); // Adding quantity
-            //    context.Products.Add(product);
-            //    context.SaveChanges(); // Save changes to the database
-            //}
-            try
-            {
-                string connstring = "server=localhost;uid=root;pwd=garomysql1852;database=studentdb";
-                MySqlConnection conn = new MySqlConnection();
-                conn.ConnectionString = connstring;
-                conn.Open();
-                string sql = "select * from student";
-                MySqlCommand cmd = new MySqlCommand(sql, conn);
-                MySqlDataReader dr = cmd.ExecuteReader();
-                while (dr.Read())
-                {
-                    MessageBox.Show("name " + dr["NAME"]);
-                }
-            }catch (Exception ex)
-            {
-
-            }
-
-
-
+            this.GenerateExcelForAll(tabControl1);
 
         }
     }
