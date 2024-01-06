@@ -4,23 +4,23 @@ using System.Windows.Forms;
 
 namespace Production_Controll
 {
-    public partial class Form3 : Form
+    public partial class ProductModifieForm : Form
     {
         private long productId;
         private ProductService productService;
         private ModificationService modificationService;
 
-        private Form1 parentForm;
+        private MainForm parentForm;
         private Panel selectedPanel;
 
-        public Form3()
+        public ProductModifieForm()
         {
             InitializeComponent();
             this.AcceptButton = savebtn;
-            textBox1.KeyPress += textBox1_KeyPress; // Wire up the KeyPress event
+            textBox1.KeyPress += textBox1_KeyPress; 
         }
 
-        public Form3(Form1 parent, long productId, Panel selectedPanel)
+        public ProductModifieForm(MainForm parent, long productId, Panel selectedPanel)
             : this()
         {
             this.productId = productId;
@@ -33,7 +33,6 @@ namespace Production_Controll
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            // Allowing only numbers, Backspace, and Control keys
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
             {
                 e.Handled = true;
@@ -70,15 +69,14 @@ namespace Production_Controll
                 }
             }
 
-            this.UpdateProductQuantity(productId, operation, quantity);
-            this.UpdateLabels(selectedPanel,productId);
+            this.UpdateProductQuantity(productId, operation, quantity,selectedPanel);
 
             this.Close();
         }
 
         private void deletebtn_Click(object sender, EventArgs e)
         {
-            parentForm.DeletePanel();
+            parentForm.DeletePanel(selectedPanel);
             productService.DeleteProduct(productId);
             this.Close();
         }

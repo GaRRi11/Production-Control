@@ -1,6 +1,6 @@
 ﻿namespace Production_Controll
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         ///  Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
@@ -90,7 +90,7 @@
             excelBtn.UseVisualStyleBackColor = true;
             excelBtn.Click += excelBtn_Click;
             // 
-            // Form1
+            // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -98,8 +98,9 @@
             Controls.Add(excelBtn);
             Controls.Add(productionAddBtn);
             Controls.Add(tabControl1);
-            Name = "Form1";
+            Name = "MainForm";
             Text = "Form1";
+            Load += MainForm_Load;
             tabControl1.ResumeLayout(false);
             ResumeLayout(false);
         }

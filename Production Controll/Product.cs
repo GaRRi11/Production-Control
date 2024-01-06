@@ -16,7 +16,7 @@ namespace Production_Controll
         public int quantity { get; set; }
         public DateTime lastModified { get; set; }
 
-        public static long lastId = 5;
+        public static long lastId = 0;
 
         public enum City
         {

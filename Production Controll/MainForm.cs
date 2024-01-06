@@ -7,21 +7,20 @@ using MySql.Data.MySqlClient;
 
 namespace Production_Controll
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private int panelCountTbilisi = 0;
         private int panelCountQutaisi = 0;
         private const int panelHeight = 50;
         private const int panelMargin = 10;
-        private const string ProductPanelName = "productPanel";
 
         private ProductService ProductService;
         private DatabaseManager DatabaseManager;
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
-            this.FormClosing += Form1_FormClosing; // Subscribe to the FormClosing event
+            this.FormClosing += Form1_FormClosing;
             this.ProductService = new ProductService();
             this.DatabaseManager = new DatabaseManager();
             DatabaseManager.InitializeDB();
@@ -56,7 +55,6 @@ namespace Production_Controll
         {
             string tabName = this.tabControl1.SelectedTab.Name;
             productPanel.Location = new Point(0, (tabName == "tabPage1" ? panelCountTbilisi++ : panelCountQutaisi++) * (panelHeight + panelMargin));
-            productPanel.Name = ProductPanelName;
 
             this.tabControl1.SelectedTab.AutoScroll = true;
             this.tabControl1.SelectedTab.Controls.Add(productPanel);
@@ -66,10 +64,9 @@ namespace Production_Controll
         {
             Product.City city = (this.tabControl1.SelectedTab.Name == "tabPage1") ? Product.City.TBILISI : Product.City.KUTAISI;
             Product product = new Product(productName, city);
-            ProductService.CreateProduct(product);
+            ProductService.SaveProduct(product);
 
             Panel productPanel = this.CreateProductPanel(product);
-            productPanel.Name = ProductPanelName;
 
             productPanel.Click += panel_Click;
             productPanel.MouseEnter += panel_MouseEnter;
@@ -84,7 +81,7 @@ namespace Production_Controll
             {
                 long productId = product.id;
 
-                using (Form3 form3 = new Form3(this, productId, panel))
+                using (ProductModifieForm form3 = new ProductModifieForm(this, productId, panel))
                 {
                     form3.ShowDialog();
                 }
@@ -93,7 +90,7 @@ namespace Production_Controll
 
         private void productionAddBtn_Click(object sender, EventArgs e)
         {
-            using (Form2 form2 = new Form2())
+            using (ProductAddForm form2 = new ProductAddForm())
             {
                 form2.ShowDialog();
                 string productName = form2.productName;
@@ -105,35 +102,43 @@ namespace Production_Controll
             }
         }
 
-
-
-        public void DeletePanel()
+        public void DeletePanel(Panel panel)
         {
-            string tabName = this.tabControl1.SelectedTab.Name;
+            string tabName = tabControl1.SelectedTab.Name;
 
-            foreach (Control control in tabControl1.SelectedTab.Controls)
+            if (tabName == "tabPage1")
             {
-                if (control is Panel panel && control.Name == ProductPanelName)
+                panelCountTbilisi--;
+            }
+            else
+            {
+                panelCountQutaisi--;
+            }
+
+            int removedIndex = tabControl1.SelectedTab.Controls.GetChildIndex(panel);
+            tabControl1.SelectedTab.Controls.Remove(panel);
+
+            for (int i = removedIndex; i < tabControl1.SelectedTab.Controls.Count; i++)
+            {
+                Control control = tabControl1.SelectedTab.Controls[i];
+                if (control is Panel)
                 {
-                    if (tabName == "tabPage1")
-                    {
-                        panelCountTbilisi--;
-                    }
-                    else
-                    {
-                        panelCountQutaisi--;
-                    }
-                    tabControl1.SelectedTab.Controls.Remove(control);
-                    break;
+                    int yPosition = control.Location.Y - (panelHeight + panelMargin);
+                    control.Location = new Point(control.Location.X, yPosition);
                 }
             }
         }
 
-        
+
         private void excelBtn_Click(object sender, EventArgs e)
         {
 
             this.GenerateExcelForAll(tabControl1);
+
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
 
         }
     }

@@ -11,8 +11,6 @@ namespace Production_Controll
     public class Modification
     {
         public long id {  get; set; }
-
-        //@manytoone
         public long productId { get; set; }
 
         public Operation operation { get; set; }

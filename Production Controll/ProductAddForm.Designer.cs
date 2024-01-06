@@ -1,6 +1,6 @@
 ﻿namespace Production_Controll
 {
-    partial class Form2
+    partial class ProductAddForm
     {
         /// <summary>
         /// Required designer variable.

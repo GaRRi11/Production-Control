@@ -14,7 +14,7 @@ namespace Production_Controll
             modificationService = new ModificationService();
         }
 
-        public Product CreateProduct(Product product)
+        public Product SaveProduct(Product product)
         {
             string query = $"INSERT INTO products (id, name, city, quantity, lastModified) " +
                            $"VALUES ('{product.id}', '{product.name}', '{product.city}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
@@ -51,7 +51,6 @@ namespace Production_Controll
 
             if (result.Count > 0 && result[0].ContainsKey("city"))
             {
-                // Assuming the city column is a string type in the database
                 return result[0]["city"].ToString();
             }
 
@@ -108,8 +107,12 @@ namespace Production_Controll
         public bool DeleteProduct(long id)
         {
             string query = $"DELETE FROM products WHERE id = {id};";
-            dbManager.ExecuteNonQuery(query);
-            // Handle checks and return accordingly
+            Product product = GetProductById(id);
+            if (product != null)
+            {
+                dbManager.ExecuteNonQuery(query);
+                return true;
+            }
             return false;
         }
 

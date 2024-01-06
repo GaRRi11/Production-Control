@@ -1,6 +1,6 @@
 ﻿namespace Production_Controll
 {
-    partial class Form3
+    partial class ProductModifieForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form3));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProductModifieForm));
             label1 = new Label();
             textBox1 = new TextBox();
             excelBtn = new Button();

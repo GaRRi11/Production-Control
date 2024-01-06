@@ -10,10 +10,10 @@ using System.Windows.Forms;
 
 namespace Production_Controll
 {
-    public partial class Form2 : Form
+    public partial class ProductAddForm : Form
     {
         public string productName { get; set; }
-        public Form2()
+        public ProductAddForm()
         {
             InitializeComponent();
             this.AcceptButton = button1;
@@ -23,8 +23,6 @@ namespace Production_Controll
         {
             this.Size = new Size(407, 247);
         }
-
-        
 
         private void button1_Click(object sender, EventArgs e)
         {
