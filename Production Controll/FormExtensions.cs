@@ -1,10 +1,12 @@
 ﻿using OfficeOpenXml;
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static Production_Controll.Product;
 
 
 namespace Production_Controll
@@ -18,6 +20,19 @@ namespace Production_Controll
         private const string productPanelName = "productPanel";
         private static ProductService productService = new ProductService();
         private static ModificationService modificationService = new ModificationService();
+        public static CityService cityService = new CityService();  
+
+        public static TabPage CreateTabPage(this Form form, string cityName,int capacity)
+        {
+            City city = new City(cityName, capacity); //servis da baza da kvelaferi
+            cityService.SaveCity(city);
+            TabPage tabPage = new TabPage();
+            tabPage.AutoScroll = true;
+            tabPage.Text = cityName;
+            tabPage.Tag = city.id;
+            tabPage.Visible = true;
+            return tabPage;
+        }
 
 
         public static Panel CreateProductPanel(this Form form,Product product)
@@ -107,6 +122,9 @@ namespace Production_Controll
 
         public static void GenerateExcelForOne(this Form form, long productId)
         {
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
 
             List<Modification> modifications = modificationService.GetAllModificationsById(productId);
 

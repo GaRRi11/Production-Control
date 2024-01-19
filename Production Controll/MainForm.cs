@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using OfficeOpenXml;
 using MySql.Data.MySqlClient;
+using System.Windows.Forms.VisualStyles;
 
 namespace Production_Controll
 {
@@ -32,6 +33,19 @@ namespace Production_Controll
             DatabaseManager.DropTables();
         }
 
+        private void cityAddbtn_Click(object sender, EventArgs e)
+        {
+            string cityName;
+            int capacity;
+            using (CityAddForm cityAddForm = new CityAddForm())
+            {
+                cityAddForm.ShowDialog();
+                 cityName = cityAddForm.cityName;
+                 capacity = cityAddForm.capacity;
+                 TabPage tabPage = this.CreateTabPage(cityName, capacity);
+                this.tabControl1.Controls.Add(tabPage);
+            }
+        }
         private void panelMouseEnterAndLeave(object sender, bool enter)
         {
             if (sender is Panel panel)
@@ -62,8 +76,16 @@ namespace Production_Controll
 
         private void AddProductPanel(string productName)
         {
-            Product.City city = (this.tabControl1.SelectedTab.Name == "tabPage1") ? Product.City.TBILISI : Product.City.KUTAISI;
-            Product product = new Product(productName, city);
+            int cityId = 0;
+            if (this.tabControl1.SelectedTab != null)
+            {
+                // Check if the Tag is not null and can be converted to an int
+                if (this.tabControl1.SelectedTab.Tag != null && int.TryParse(this.tabControl1.SelectedTab.Tag.ToString(), out int tabCityId))
+                {
+                    cityId = tabCityId;
+                }
+            }
+            Product product = new Product(productName, cityId);
             ProductService.SaveProduct(product);
 
             Panel productPanel = this.CreateProductPanel(product);
@@ -141,5 +163,6 @@ namespace Production_Controll
         {
 
         }
+
     }
 }

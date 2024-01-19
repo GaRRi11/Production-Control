@@ -12,7 +12,8 @@ namespace Production_Controll
     {
         public long id { get; set; }
         public string name { get; set; }
-        public City city { get; set; }
+
+        public int cityId { get; set; }
         public int quantity { get; set; }
         public DateTime lastModified { get; set; }
 
@@ -29,20 +30,20 @@ namespace Production_Controll
             return ++lastId; 
         }
 
-        public Product(string name, City city)
+        public Product(string name, int cityId)
         {
             this.id = GenerateId();
             this.name = name;
-            this.city = city;
+            this.cityId = cityId;
             this.quantity = 0;
             this.lastModified = DateTime.Now;
         }
 
-        public Product(long id, string name, City city, int quantity, DateTime lastModified)
+        public Product(long id, string name, int cityId, int quantity, DateTime lastModified)
         {
             this.id = id;
             this.name = name;
-            this.city = city;
+            this.cityId = cityId;
             this.quantity = quantity;
             this.lastModified = lastModified;
         }

@@ -8,7 +8,6 @@ namespace Production_Controll
     {
         private long productId;
         private ProductService productService;
-        private ModificationService modificationService;
 
         private MainForm parentForm;
         private Panel selectedPanel;
@@ -27,7 +26,6 @@ namespace Production_Controll
             this.parentForm = parent;
             this.selectedPanel = selectedPanel;
             this.productService = new ProductService();
-            this.modificationService = new ModificationService();
             this.productNameLabel.Text = productService.GetProductNameById(productId);
         }
 
@@ -41,9 +39,9 @@ namespace Production_Controll
 
         private void savebtn_Click(object sender, EventArgs e)
         {
-            if (!int.TryParse(textBox1.Text, out int number) || string.IsNullOrWhiteSpace(textBox1.Text))
+            if (!int.TryParse(textBox1.Text, out int number) || string.IsNullOrWhiteSpace(textBox1.Text) || number == 0)
             {
-                MessageBox.Show("Type number");
+                MessageBox.Show("Type valid number");
                 textBox1.Clear();
                 return;
             }

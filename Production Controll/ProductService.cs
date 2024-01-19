@@ -16,8 +16,8 @@ namespace Production_Controll
 
         public Product SaveProduct(Product product)
         {
-            string query = $"INSERT INTO products (id, name, city, quantity, lastModified) " +
-                           $"VALUES ('{product.id}', '{product.name}', '{product.city}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
+            string query = $"INSERT INTO products (id, name, cityId, quantity, lastModified) " +
+                           $"VALUES ('{product.id}', '{product.name}', '{product.cityId}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
             dbManager.ExecuteNonQuery(query);
             RecordModification(product.id, Modification.Operation.CREATE, 0);
             return product;
@@ -70,7 +70,7 @@ namespace Production_Controll
             return new Product(
                 Convert.ToInt64(result["id"]),
                 result["name"].ToString(),
-                (Product.City)Enum.Parse(typeof(Product.City), result["city"].ToString()),
+                Convert.ToInt32(result["cityId"]),
                 Convert.ToInt32(result["quantity"]),
                 Convert.ToDateTime(result["lastModified"])
             );

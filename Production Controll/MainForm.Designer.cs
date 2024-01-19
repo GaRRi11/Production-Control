@@ -30,44 +30,19 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             tabControl1 = new TabControl();
-            tabPage1 = new TabPage();
-            tabPage2 = new TabPage();
             productionAddBtn = new Button();
             excelBtn = new Button();
-            tabControl1.SuspendLayout();
+            cityAddbtn = new Button();
             SuspendLayout();
             // 
             // tabControl1
             // 
-            tabControl1.Controls.Add(tabPage1);
-            tabControl1.Controls.Add(tabPage2);
             tabControl1.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
             tabControl1.Location = new Point(-2, 35);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
             tabControl1.Size = new Size(802, 418);
             tabControl1.TabIndex = 0;
-            // 
-            // tabPage1
-            // 
-            tabPage1.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            tabPage1.Location = new Point(4, 29);
-            tabPage1.Name = "tabPage1";
-            tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(794, 385);
-            tabPage1.TabIndex = 0;
-            tabPage1.Text = "თბილისი";
-            tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // tabPage2
-            // 
-            tabPage2.Location = new Point(4, 29);
-            tabPage2.Name = "tabPage2";
-            tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(794, 385);
-            tabPage2.TabIndex = 1;
-            tabPage2.Text = "ქუთაისი";
-            tabPage2.UseVisualStyleBackColor = true;
             // 
             // productionAddBtn
             // 
@@ -90,27 +65,37 @@
             excelBtn.UseVisualStyleBackColor = true;
             excelBtn.Click += excelBtn_Click;
             // 
+            // cityAddbtn
+            // 
+            cityAddbtn.Font = new Font("Segoe UI Black", 10.8F, FontStyle.Bold, GraphicsUnit.Point);
+            cityAddbtn.Location = new Point(114, 2);
+            cityAddbtn.Name = "cityAddbtn";
+            cityAddbtn.Size = new Size(50, 31);
+            cityAddbtn.TabIndex = 11;
+            cityAddbtn.Text = "+";
+            cityAddbtn.UseVisualStyleBackColor = true;
+            cityAddbtn.Click += cityAddbtn_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(796, 447);
+            Controls.Add(cityAddbtn);
             Controls.Add(excelBtn);
             Controls.Add(productionAddBtn);
             Controls.Add(tabControl1);
             Name = "MainForm";
             Text = "Form1";
             Load += MainForm_Load;
-            tabControl1.ResumeLayout(false);
             ResumeLayout(false);
         }
 
         #endregion
 
         public TabControl tabControl1;
-        private TabPage tabPage1;
-        private TabPage tabPage2;
         private Button excelBtn;
         private Button productionAddBtn;
+        private Button cityAddbtn;
     }
 }
