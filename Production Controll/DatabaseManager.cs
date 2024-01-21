@@ -19,29 +19,29 @@ namespace Production_Controll
         public void InitializeDB()
         {
             string createProductTableQuery = @"
-                CREATE TABLE IF NOT EXISTS production_control.products (
-                id BIGINT NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                cityId BIGINT NOT NULL
-                quantity INT NOT NULL,
-                lastModified DATETIME NOT NULL,
-                PRIMARY KEY (id));
-                FOREIGN KEY (CityId) REFERENCES production_control.city(id) ON DELETE CASCADE);";
+                 CREATE TABLE IF NOT EXISTS production_control.products (
+                 id BIGINT NOT NULL AUTO_INCREMENT,
+                 name VARCHAR(255) NOT NULL UNIQUE,
+                 cityId BIGINT NOT NULL,
+                 quantity INT NOT NULL,
+                 lastModified DATETIME NOT NULL,
+                 PRIMARY KEY (id),
+                 FOREIGN KEY (cityId) REFERENCES production_control.city(id) ON DELETE CASCADE);";
 
-            string createModificationTableQuery = @"
-                CREATE TABLE IF NOT EXISTS production_control.Modifications (
-                id BIGINT NOT NULL,
-                productId BIGINT NOT NULL,
-                operationType VARCHAR(255) NOT NULL,
-                quantityChanged INT NOT NULL,
-                date DATETIME NOT NULL,
-                PRIMARY KEY (id),
-                FOREIGN KEY (ProductId) REFERENCES production_control.products(id) ON DELETE CASCADE);";
+            string createModificationTableQuery = @"CREATE TABLE IF NOT EXISTS production_control.Modifications (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    productId BIGINT NOT NULL,
+    operationType VARCHAR(255) NOT NULL,
+    quantityChanged INT NOT NULL,
+    date DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (productId) REFERENCES production_control.products(id) ON DELETE CASCADE
+);";
 
             string createCityTableQuery = @"
                 CREATE TABLE IF NOT EXISTS production_control.city (
-                id BIGINT NOT NULL,
-                name VARCHAR(255) NOT NULL,
+                id BIGINT NOT NULL AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL UNIQUE,
                 capacity INT NOT NULL,
                 PRIMARY KEY (id));";
 
@@ -118,15 +118,15 @@ namespace Production_Controll
             return resultList;
         }
 
-        public void DropTables()
-        {
-            string dropModificationConstraintQuery = "ALTER TABLE production_control.Modifications DROP FOREIGN KEY modifications_ibfk_1;";
-            string dropProductTableQuery = "DROP TABLE IF EXISTS production_control.products;";
-            string dropModificationTableQuery = "DROP TABLE IF EXISTS production_control.Modifications;";
+        //public void DropTables()
+        //{
+        //    string dropModificationConstraintQuery = "ALTER TABLE production_control.Modifications DROP FOREIGN KEY modifications_ibfk_1;";
+        //    string dropProductTableQuery = "DROP TABLE IF EXISTS production_control.products;";
+        //    string dropModificationTableQuery = "DROP TABLE IF EXISTS production_control.Modifications;";
 
-            ExecuteNonQuery(dropModificationConstraintQuery);
-            ExecuteNonQuery(dropProductTableQuery);
-            ExecuteNonQuery(dropModificationTableQuery);
-        }
+        //    ExecuteNonQuery(dropModificationConstraintQuery);
+        //    ExecuteNonQuery(dropProductTableQuery);
+        //    ExecuteNonQuery(dropModificationTableQuery);
+        //}
     }
 }

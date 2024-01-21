@@ -17,5 +17,12 @@ namespace Production_Controll
             this.name = name;
             this.capacity = capacity;
         }
+
+        public City(long id, string name, int capacity)
+        {
+            this.id = id;
+            this.name = name;
+            this.capacity = capacity;
+        }
     }
 }

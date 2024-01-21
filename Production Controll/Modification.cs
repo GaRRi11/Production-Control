@@ -20,15 +20,17 @@ namespace Production_Controll
         public DateTime date { get; set; }
 
 
-        public static long lastId = 0;
-        private long GenerateId()
-        {
-            return ++lastId;
-        }
-
         public Modification(long productId, Operation operation, int quantity, DateTime date)
         {
-            this.id = GenerateId();
+            this.productId = productId;
+            this.operation = operation;
+            this.quantity = quantity;
+            this.date = date;
+        }
+
+        public Modification(long id, long productId, Operation operation, int quantity, DateTime date)
+        {
+            this.id = id;
             this.productId = productId;
             this.operation = operation;
             this.quantity = quantity;

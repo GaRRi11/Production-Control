@@ -12,20 +12,35 @@ namespace Production_Controll
             dbManager = new DatabaseManager();
         }
 
+        public long GetLastInsertedId()
+        {
+            string query = "SELECT LAST_INSERT_ID();";
+            List<Dictionary<string, object>> result = dbManager.ExecuteQuery(query);
+
+            if (result.Count > 0 && result[0].ContainsKey("LAST_INSERT_ID()"))
+            {
+                return Convert.ToInt64(result[0]["LAST_INSERT_ID()"]);
+            }
+
+            // Handle the case where the ID retrieval fails (optional)
+            Console.WriteLine("Error retrieving last inserted ID.");
+            return -1; // or throw an exception
+        }
+
         public Modification SaveModification(Modification modification)
         {
             string operationType = modification.operation.ToString();
             string formattedDate = modification.date.ToString("yyyy-MM-dd HH:mm:ss");
 
-            string query = $"INSERT INTO modifications (id, productId, operationType, quantityChanged, date) " +
-                           $"VALUES ({modification.id}, {modification.productId}, '{operationType}', {modification.quantity}, '{formattedDate}');";
-
-            dbManager.ExecuteNonQuery(query);
+            string query = $"INSERT INTO modifications (productId, operationType, quantityChanged, date) " +
+                           $"VALUES ({modification.productId}, '{operationType}', {modification.quantity}, '{formattedDate}');";
+            modification.id = GetLastInsertedId();
+            dbManager.ExecuteNonQuery(query);            
             return modification;
         }
 
 
-        public List<Modification> GetAllModificationsById(long productId)
+        public List<Modification> GetAllModificationsByProductId(long productId)
         {
             string query = $"SELECT * FROM modifications WHERE productId = {productId};";
             var result = dbManager.ExecuteQuery(query);
@@ -49,6 +64,35 @@ namespace Production_Controll
 
             return modifications;
         }
+        public List<Modification> GetAllModifications()
+        {
+            string query = "SELECT * FROM modifications;";
+            var result = dbManager.ExecuteQuery(query);
+
+            List<Modification> modifications = new List<Modification>();
+
+            foreach (var row in result)
+            {
+                if (row.TryGetValue("id", out var idObj) &&
+                    row.TryGetValue("productId", out var productIdObj) &&
+                    row.TryGetValue("operationType", out var operationTypeObj) &&
+                    row.TryGetValue("quantityChanged", out var quantityObj) &&
+                    row.TryGetValue("date", out var dateObj))
+                {
+                    long id = Convert.ToInt64(idObj);
+                    long productId = Convert.ToInt64(productIdObj);
+                    Modification.Operation operation = (Modification.Operation)Enum.Parse(typeof(Modification.Operation), operationTypeObj.ToString());
+                    int quantity = Convert.ToInt32(quantityObj);
+                    DateTime date = Convert.ToDateTime(dateObj);
+
+                    Modification modification = new Modification(id, productId, operation, quantity, date);
+                    modifications.Add(modification);
+                }
+            }
+
+            return modifications;
+        }
+
 
     }
 }

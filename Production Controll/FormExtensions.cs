@@ -22,13 +22,12 @@ namespace Production_Controll
         private static ModificationService modificationService = new ModificationService();
         public static CityService cityService = new CityService();  
 
-        public static TabPage CreateTabPage(this Form form, string cityName,int capacity)
+        public static TabPage CreateTabPage(this Form form, City city)
         {
-            City city = new City(cityName, capacity); //servis da baza da kvelaferi
-            cityService.SaveCity(city);
             TabPage tabPage = new TabPage();
+            tabPage.Text = city.name;
+            //capacity
             tabPage.AutoScroll = true;
-            tabPage.Text = cityName;
             tabPage.Tag = city.id;
             tabPage.Visible = true;
             return tabPage;
@@ -126,7 +125,7 @@ namespace Production_Controll
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 
-            List<Modification> modifications = modificationService.GetAllModificationsById(productId);
+            List<Modification> modifications = modificationService.GetAllModificationsByProductId(productId);
 
             using (ExcelPackage excelPackage = new ExcelPackage())
             {

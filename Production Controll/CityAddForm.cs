@@ -15,6 +15,7 @@ namespace Production_Controll
 
         public string cityName;
         public int capacity;
+        public CityService cityService = new CityService();
         public CityAddForm()
         {
             InitializeComponent();
@@ -46,6 +47,11 @@ namespace Production_Controll
                 return;
             }
             cityName = textBox1.Text;
+            if (!cityService.IsCityNameUnique(cityName))
+            {
+                MessageBox.Show("City name must be unique");
+                return;
+            }
             capacity = int.Parse(textBox2.Text);
             this.Close();
         }

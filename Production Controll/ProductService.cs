@@ -14,14 +14,58 @@ namespace Production_Controll
             modificationService = new ModificationService();
         }
 
+        public long GetLastInsertedId()
+        {
+            string query = "SELECT LAST_INSERT_ID();";
+            List<Dictionary<string, object>> result = dbManager.ExecuteQuery(query);
+
+            if (result.Count > 0 && result[0].ContainsKey("LAST_INSERT_ID()"))
+            {
+                return Convert.ToInt64(result[0]["LAST_INSERT_ID()"]);
+            }
+
+            // Handle the case where the ID retrieval fails (optional)
+            Console.WriteLine("Error retrieving last inserted ID.");
+            return -1; // or throw an exception
+        }
+
         public Product SaveProduct(Product product)
         {
-            string query = $"INSERT INTO products (id, name, cityId, quantity, lastModified) " +
-                           $"VALUES ('{product.id}', '{product.name}', '{product.cityId}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
-            dbManager.ExecuteNonQuery(query);
-            RecordModification(product.id, Modification.Operation.CREATE, 0);
-            return product;
+            
+                string query = $"INSERT INTO products (name, cityId, quantity, lastModified) " +
+                           $"VALUES ('{product.name}', '{product.cityId}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
+                dbManager.ExecuteNonQuery(query);
+                product.id = GetLastInsertedId();
+                RecordModification(product.id, Modification.Operation.CREATE, 0);
+                return product;
+           
+                throw new InvalidOperationException("City name must be unique.");
+                return null;
+            
         }
+
+        public Product getProductByName(string productName)
+        {
+            string query = $"SELECT * FROM products WHERE name = '{productName}';";
+            var result = dbManager.ExecuteQuery(query);
+
+            if (result.Count > 0)
+            {
+                return ExtractProductFromResult(result[0]);
+            }
+
+            return null;
+        }
+
+
+        public bool DoesProductExistInCity(string productName, int cityId)
+        {
+            string query = $"SELECT COUNT(*) AS count FROM products WHERE name = '{productName}' AND cityId = {cityId};";
+            var result = dbManager.ExecuteQuery(query);
+
+            return result.Count > 0 && result[0].ContainsKey("count") && Convert.ToInt32(result[0]["count"]) > 0;
+        }
+
 
         public DateTime GetLastModifiedDate(long productId)
         {
@@ -124,5 +168,34 @@ namespace Production_Controll
             Modification modification = new Modification(id, operationType, quantityChanged, DateTime.Now);
             modificationService.SaveModification(modification);
         }
+
+        public List<Product> GetAllProductsByCityId(long cityId)
+        {
+            string query = $"SELECT * FROM products WHERE cityId = {cityId};";
+            var result = dbManager.ExecuteQuery(query);
+
+            List<Product> products = new List<Product>();
+
+            foreach (var row in result)
+            {
+                if (row.TryGetValue("id", out var idObj) &&
+                    row.TryGetValue("name", out var nameObj) &&
+                    row.TryGetValue("quantity", out var quantityObj) &&
+                    row.TryGetValue("lastModified", out var lastModifiedObj))
+                {
+                    long id = Convert.ToInt64(idObj);
+                    string name = nameObj.ToString();
+                    int quantity = Convert.ToInt32(quantityObj);
+                    DateTime lastModified = Convert.ToDateTime(lastModifiedObj);
+
+                    Product product = new Product(id, name, cityId, quantity, lastModified);
+                    products.Add(product);
+                }
+            }
+
+            return products;
+        }
+
+
     }
 }
