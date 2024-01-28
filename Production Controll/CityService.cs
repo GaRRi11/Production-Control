@@ -15,6 +15,17 @@ namespace Production_Controll
             dbManager = new DatabaseManager();
         }
 
+        public int UpdateAvailableSpace(City city, Modification modification)
+        {
+            //wavides bazashi da shecvalos space modifikaciidan aigos mimatebaa tu gamokleba da raodenoba 
+        }
+
+        public int GetAvailableSpace(City city)
+        {
+            //wavides da wamoigos available space columni
+            //am metods gamovikenebt capacity label is gansanaxleblad extensionshi ikneba update label da ik 
+        }
+
         public long GetLastInsertedId()
         {
             string query = "SELECT LAST_INSERT_ID();";

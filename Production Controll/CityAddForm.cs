@@ -16,9 +16,12 @@ namespace Production_Controll
         public string cityName;
         public int capacity;
         public CityService cityService = new CityService();
-        public CityAddForm()
+        private MainForm parentForm;
+        public CityAddForm(MainForm form)
         {
             InitializeComponent();
+            parentForm = form;
+            this.AcceptButton = savebtn;
         }
 
         private void textBox2_KeyPress(object sender, KeyPressEventArgs e)
@@ -53,6 +56,8 @@ namespace Production_Controll
                 return;
             }
             capacity = int.Parse(textBox2.Text);
+            City city = parentForm.SaveCity(cityName, capacity);
+            parentForm.CreateAndAddTabPage(city);
             this.Close();
         }
     }

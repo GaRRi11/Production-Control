@@ -30,9 +30,11 @@ namespace Production_Controll
             tabPage.AutoScroll = true;
             tabPage.Tag = city.id;
             tabPage.Visible = true;
+            //add city capacity label
             return tabPage;
         }
 
+        //city capacity label update method
 
         public static Panel CreateProductPanel(this Form form,Product product)
         {

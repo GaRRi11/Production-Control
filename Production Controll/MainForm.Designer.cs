@@ -53,7 +53,7 @@
             productionAddBtn.TabIndex = 10;
             productionAddBtn.Text = "+";
             productionAddBtn.UseVisualStyleBackColor = true;
-            productionAddBtn.Click += productionAddBtn_Click;
+            productionAddBtn.Click += ProductionAddBtn_Click;
             // 
             // excelBtn
             // 
@@ -63,7 +63,7 @@
             excelBtn.Size = new Size(50, 31);
             excelBtn.TabIndex = 9;
             excelBtn.UseVisualStyleBackColor = true;
-            excelBtn.Click += excelBtn_Click;
+            excelBtn.Click += ExcelBtn_Click;
             // 
             // cityAddbtn
             // 
@@ -74,7 +74,7 @@
             cityAddbtn.TabIndex = 11;
             cityAddbtn.Text = "+";
             cityAddbtn.UseVisualStyleBackColor = true;
-            cityAddbtn.Click += cityAddbtn_Click;
+            cityAddbtn.Click += CityAddbtn_Click;
             // 
             // MainForm
             // 

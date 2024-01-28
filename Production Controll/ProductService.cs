@@ -7,6 +7,7 @@ namespace Production_Controll
     {
         private readonly DatabaseManager dbManager;
         private readonly ModificationService modificationService;
+        private CityService cityService = new CityService();
 
         public ProductService()
         {
@@ -130,6 +131,7 @@ namespace Production_Controll
         {
             string query = $"UPDATE products SET quantity = quantity + {amount} WHERE id = {id};";
             dbManager.ExecuteNonQuery(query);
+            cityService.UpdateAvailableSpace(city, modification);
             RecordModification(id, Modification.Operation.Addition, amount);
         }
 
@@ -144,7 +146,6 @@ namespace Production_Controll
         {
             string query = $"SELECT quantity >= {amount} AS result FROM products WHERE id = {id};";
             var result = dbManager.ExecuteQuery(query);
-
             return result.Count > 0 && result[0].ContainsKey("result") && Convert.ToBoolean(result[0]["result"]);
         }
 

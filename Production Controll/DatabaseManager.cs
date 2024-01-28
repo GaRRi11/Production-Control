@@ -22,20 +22,20 @@ namespace Production_Controll
                  CREATE TABLE IF NOT EXISTS production_control.products (
                  id BIGINT NOT NULL AUTO_INCREMENT,
                  name VARCHAR(255) NOT NULL UNIQUE,
-                 cityId BIGINT NOT NULL,
+                 city_id BIGINT NOT NULL,
                  quantity INT NOT NULL,
-                 lastModified DATETIME NOT NULL,
+                 last_modified DATETIME NOT NULL,
                  PRIMARY KEY (id),
-                 FOREIGN KEY (cityId) REFERENCES production_control.city(id) ON DELETE CASCADE);";
+                 FOREIGN KEY (city_id) REFERENCES production_control.city(id) ON DELETE CASCADE);";
 
             string createModificationTableQuery = @"CREATE TABLE IF NOT EXISTS production_control.Modifications (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    productId BIGINT NOT NULL,
-    operationType VARCHAR(255) NOT NULL,
-    quantityChanged INT NOT NULL,
+    product_id BIGINT NOT NULL,
+    operation_type VARCHAR(255) NOT NULL,
+    quantity_changed INT NOT NULL,
     date DATETIME NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (productId) REFERENCES production_control.products(id) ON DELETE CASCADE
+    FOREIGN KEY (product_id) REFERENCES production_control.products(id) ON DELETE CASCADE
 );";
 
             string createCityTableQuery = @"
@@ -43,6 +43,7 @@ namespace Production_Controll
                 id BIGINT NOT NULL AUTO_INCREMENT,
                 name VARCHAR(255) NOT NULL UNIQUE,
                 capacity INT NOT NULL,
+                available_space INT NOT NULL,
                 PRIMARY KEY (id));";
 
             ExecuteNonQuery(createCityTableQuery);

@@ -11,6 +11,7 @@ namespace Production_Controll
         public long id { get; set; }
         public string name { get; set; }
         public int capacity { get; set; }
+        public int availableSpace { get; set; }
 
         public City(string name, int capacity)
         {
@@ -23,6 +24,7 @@ namespace Production_Controll
             this.id = id;
             this.name = name;
             this.capacity = capacity;
+            this.availableSpace = capacity;
         }
     }
 }
