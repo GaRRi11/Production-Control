@@ -15,12 +15,13 @@ namespace Production_Controll
 
         public string cityName;
         public int capacity;
-        public CityService cityService = new CityService();
+        private CityService cityService;
         private MainForm parentForm;
         public CityAddForm(MainForm form)
         {
             InitializeComponent();
             parentForm = form;
+            cityService = new CityService();
             this.AcceptButton = savebtn;
         }
 
@@ -56,7 +57,13 @@ namespace Production_Controll
                 return;
             }
             capacity = int.Parse(textBox2.Text);
-            City city = parentForm.SaveCity(cityName, capacity);
+            City city = new City(cityName, capacity);
+            city = cityService.SaveCity(city);
+            if (city == null)
+            {
+                MessageBox.Show("City save failed please try again");
+                this.Close();
+            }
             parentForm.CreateAndAddTabPage(city);
             this.Close();
         }

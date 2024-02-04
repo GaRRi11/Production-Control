@@ -7,7 +7,11 @@ namespace Production_Controll
     public partial class ProductModifieForm : Form
     {
         private long productId;
+        private City city;
+        private Product product;
         private ProductService productService;
+        private ModificationService modificationService;
+        private CityService cityService;
 
         private MainForm parentForm;
         private Panel selectedPanel;
@@ -26,7 +30,11 @@ namespace Production_Controll
             this.parentForm = parent;
             this.selectedPanel = selectedPanel;
             this.productService = new ProductService();
-            this.productNameLabel.Text = productService.GetProductNameById(productId);
+            this.cityService = new CityService();
+            this.modificationService = new ModificationService();
+            this.product = productService.GetProductById(productId);
+            this.city = cityService.FindById(product.cityId);
+            this.productNameLabel.Text = product.name;
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -58,30 +66,66 @@ namespace Production_Controll
                 ? Modification.Operation.Addition
                 : Modification.Operation.Substraction;
 
-            if (operation == Modification.Operation.Substraction)
+            Modification modification = new Modification(productId, operation, quantity, DateTime.Now);
+
+            if (operation == Modification.Operation.Addition) {
+
+                if (quantity > city.availableSpace)
+                {
+                    MessageBox.Show("no enought space in that city");
+                    return;
+                }
+
+            }
+
+                if (operation == Modification.Operation.Substraction)
             {
-                if (!productService.CheckQuantityForSubtraction(productId, quantity))
+                if (!productService.CheckQuantityForSubtraction(product.id, quantity))
                 {
                     MessageBox.Show("type valid number");
                     return;
                 }
             }
 
-            this.UpdateProductQuantity(productId, operation, quantity,selectedPanel);
 
+            if (!productService.UpdateQuantity(modification))
+            {
+                MessageBox.Show("Product quantity modifie failed please try again");
+                return;
+            }
+            this.UpdateLabels(selectedPanel, product.id);
+            this.UpdateTabPageText(GetTabPageByCity(city), city.id);
             this.Close();
         }
 
         private void deletebtn_Click(object sender, EventArgs e)
         {
+            if (!productService.DeleteProduct(productId))
+            {
+                MessageBox.Show("product delete failed please try again");
+                return;
+            }
             parentForm.DeletePanel(selectedPanel);
-            productService.DeleteProduct(productId);
+            this.UpdateTabPageText(GetTabPageByCity(city), city.id);
             this.Close();
+        }
+
+        public TabPage GetTabPageByCity(City city)
+        {
+            var association = this.GetTabPageCityAssociationByCity(city.id);
+            TabPage tabPage = new TabPage();
+            if (association != null)
+            {
+                tabPage = association.TabPage;
+                return tabPage;
+            }
+            return null;
         }
 
         private void excelBtn_Click(object sender, EventArgs e)
         {
-            this.GenerateExcelForOne(productId);
+            List<Modification> modifications = modificationService.GetAllModificationsByProductId(product.id);
+            this.GenerateExcelForOne(product,modifications);
         }
 
     }

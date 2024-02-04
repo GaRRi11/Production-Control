@@ -17,14 +17,17 @@ namespace Production_Controll
         {
             this.name = name;
             this.capacity = capacity;
+            this.availableSpace = capacity;
         }
 
-        public City(long id, string name, int capacity)
+        public City(long id, string name, int capacity,int availableSpace)
         {
             this.id = id;
             this.name = name;
             this.capacity = capacity;
-            this.availableSpace = capacity;
+            this.availableSpace = availableSpace;
         }
+
+
     }
 }

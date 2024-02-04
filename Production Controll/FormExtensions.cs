@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml;
+﻿using Microsoft.VisualBasic.Logging;
+using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
@@ -14,35 +15,70 @@ namespace Production_Controll
     public static class FormExtensions
     {
 
-
-        private const int panelHeight = 50;
-        private const int panelMargin = 10;
-        private const string productPanelName = "productPanel";
+        private static Dictionary<Panel, PanelProductAssociation> panelAssociations = new Dictionary<Panel, PanelProductAssociation>();
+        private static Dictionary<TabPage, TabPageCityAssociation> tabPageCityAssociations = new Dictionary<TabPage, TabPageCityAssociation>();
         private static ProductService productService = new ProductService();
-        private static ModificationService modificationService = new ModificationService();
-        public static CityService cityService = new CityService();  
+        private static CityService cityService = new CityService();
+
+        public static void AddTabPageCityAssociation(this Form form, TabPage tabPage, long cityId)
+        {
+            var association = new TabPageCityAssociation(tabPage, cityId);
+            tabPageCityAssociations[tabPage] = association;
+        }
+
+        public static TabPageCityAssociation GetTabPageCityAssociationByTabPage(this Form form, TabPage tabPage) 
+        { 
+            if (tabPageCityAssociations.TryGetValue(tabPage, out var association))
+            {
+                return association;
+            }
+            return null;
+        }
+
+        public static TabPageCityAssociation GetTabPageCityAssociationByCity(this Form form, long cityId)
+        {
+            return tabPageCityAssociations.Values.FirstOrDefault(association => association.cityId == cityId);
+        }
+
+        public static void AddPanelAssociation(this Form form, Panel panel, long productId)
+        {
+            var association = new PanelProductAssociation(panel, productId);
+            panelAssociations[panel] = association;
+        }
+
+        public static PanelProductAssociation GetPanelAssociation(this Form form, Panel panel)
+        {
+            if (panelAssociations.TryGetValue(panel, out var association))
+            {
+                return association;
+            }
+            return null;
+        }
 
         public static TabPage CreateTabPage(this Form form, City city)
         {
             TabPage tabPage = new TabPage();
-            tabPage.Text = city.name;
-            //capacity
+            int used = city.capacity - city.availableSpace;
+            tabPage.Text = $"{city.name} ({used}/{city.capacity})"; 
             tabPage.AutoScroll = true;
-            tabPage.Tag = city.id;
             tabPage.Visible = true;
-            //add city capacity label
+            form.AddTabPageCityAssociation(tabPage, city.id);
             return tabPage;
         }
 
-        //city capacity label update method
+        public static void UpdateTabPageText(this Form form, TabPage tabPage,long cityId)
+        {
+            City city = cityService.FindById(cityId);
+            int used = city.capacity - city.availableSpace;
+            tabPage.Text = $"{tabPage.Text.Split('(')[0]}({used}/{city.capacity})";
+        }
 
         public static Panel CreateProductPanel(this Form form,Product product)
         {
             Panel productPanel = new Panel();
             productPanel.Name = "productPanel";
-            productPanel.Tag = product;
             string productName = product.name;
-            productPanel.Size = new Size(form.ClientSize.Width - SystemInformation.VerticalScrollBarWidth, panelHeight);
+            productPanel.Size = new Size(form.ClientSize.Width - SystemInformation.VerticalScrollBarWidth, 50);
             productPanel.Name = productName;
 
             Label nameLabel = createLabel(productName, new Point(10, 10));
@@ -62,7 +98,8 @@ namespace Production_Controll
             productPanel.Controls.Add(quantityLabel);
             productPanel.Controls.Add(centerLabel);
 
-            
+            form.AddPanelAssociation(productPanel, product.id);
+
 
             return productPanel;
         }
@@ -78,7 +115,7 @@ namespace Production_Controll
             return label;
         }
 
-        public static void GenerateExcelForAll(this Form form,TabControl tabControl)
+        public static void GenerateExcelForAll(this Form form, List<City> cities, List<Product> products)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -91,27 +128,24 @@ namespace Production_Controll
                 worksheet.Cells[1, 3].Value = "Quantity";
                 worksheet.Cells[1, 4].Value = "City";
 
-                int row = 2; 
+                int row = 2;
 
-                foreach (TabPage tabPage in tabControl.TabPages)
+                foreach (Product product in products)
                 {
-                    foreach (Control control in tabPage.Controls)
-                    {
-                        if (control is Panel panel && control.Tag is Product product)
-                        {
-                            string productName = product.name;
-                            string lastModified = productService.GetLastModifiedDate(product.id).ToString();
-                            int quantity = productService.GetQuantityById(product.id);
-                            string city = productService.GetCityById(product.id);
+                    string productName = product.name;
+                    string lastModified = product.lastModified.ToString();
+                    int quantity = product.quantity;
 
-                            worksheet.Cells[row, 1].Value = productName;
-                            worksheet.Cells[row, 2].Value = lastModified;
-                            worksheet.Cells[row, 3].Value = quantity;
-                            worksheet.Cells[row, 4].Value = city;
+                    // Access the city information directly from the Product
+                    City productCity = cities.FirstOrDefault(city => city.id == product.cityId);
+                    string city = productCity != null ? productCity.name : $"Unknown City ({product.cityId})";
 
-                            row++;
-                        }
-                    }
+                    worksheet.Cells[row, 1].Value = productName;
+                    worksheet.Cells[row, 2].Value = lastModified;
+                    worksheet.Cells[row, 3].Value = quantity;
+                    worksheet.Cells[row, 4].Value = city;
+
+                    row++;
                 }
 
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -121,13 +155,10 @@ namespace Production_Controll
             }
         }
 
-        public static void GenerateExcelForOne(this Form form, long productId)
+        public static void GenerateExcelForOne(this Form form, Product product, List<Modification> modifications)
         {
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-
-            List<Modification> modifications = modificationService.GetAllModificationsByProductId(productId);
 
             using (ExcelPackage excelPackage = new ExcelPackage())
             {
@@ -142,7 +173,7 @@ namespace Production_Controll
 
                 foreach (var modification in modifications)
                 {
-                    string productName = productService.GetProductNameById(modification.productId);
+                    string productName = product.name;
                     string operationType = modification.operation.ToString();
                     int quantityChanged = modification.quantity;
                     string date = modification.date.ToString("yyyy-MM-dd HH:mm:ss");
@@ -155,7 +186,7 @@ namespace Production_Controll
                     row++;
                 }
 
-                string productLabelName = productService.GetProductNameById(productId);
+                string productLabelName = product.name;
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 string fileName = Path.Combine(desktopPath, $"{productLabelName}_Modifications.xlsx");
                 System.IO.FileInfo excelFile = new System.IO.FileInfo(fileName);
@@ -165,25 +196,14 @@ namespace Production_Controll
             }
         }
 
-        public static void UpdateProductQuantity(this Form form, long productId, Modification.Operation operation, int quantity, Panel panel)
+        public static void UpdateLabels(this Form form, Panel panelToUpdate,long productId)
         {
-            if (operation == Modification.Operation.Addition)
-            {
-                productService.AddQuantity(productId, quantity);
-            }
-            else if (operation == Modification.Operation.Substraction)
-            {
-                productService.SubtractQuantity(productId, quantity);
-            }
-            UpdateLabels(panel, productId);
-        }
+            Product product = productService.GetProductById(productId);
 
-        public static void UpdateLabels(Panel panelToUpdate, long productId)
-        {
             if (panelToUpdate != null)
             {
-                string date = productService.GetLastModifiedDate(productId).ToString();
-                int quantity = productService.GetQuantityById(productId);
+                string date = product.lastModified.ToString();
+                int quantity = product.quantity;
 
                 UpdateLabel(panelToUpdate, "quantityLabel", "რაოდენობა: " + quantity);
                 UpdateLabel(panelToUpdate, "centerLabel", "ბოლო რედ." + date);

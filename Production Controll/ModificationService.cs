@@ -32,25 +32,28 @@ namespace Production_Controll
             string operationType = modification.operation.ToString();
             string formattedDate = modification.date.ToString("yyyy-MM-dd HH:mm:ss");
 
-            string query = $"INSERT INTO modifications (productId, operationType, quantityChanged, date) " +
+            string query = $"INSERT INTO modifications (product_id, operation_type, quantity_changed, date) " +
                            $"VALUES ({modification.productId}, '{operationType}', {modification.quantity}, '{formattedDate}');";
-            modification.id = GetLastInsertedId();
-            dbManager.ExecuteNonQuery(query);            
-            return modification;
+            if (dbManager.ExecuteNonQuery(query))
+            {
+                modification.id = GetLastInsertedId();
+                return modification;
+            }
+            return null;
         }
 
 
         public List<Modification> GetAllModificationsByProductId(long productId)
         {
-            string query = $"SELECT * FROM modifications WHERE productId = {productId};";
+            string query = $"SELECT * FROM modifications WHERE product_id = {productId};";
             var result = dbManager.ExecuteQuery(query);
 
             List<Modification> modifications = new List<Modification>();
 
             foreach (var row in result)
             {
-                if (row.TryGetValue("operationType", out var operationTypeObj) &&
-                    row.TryGetValue("quantityChanged", out var quantityObj) &&
+                if (row.TryGetValue("operation_type", out var operationTypeObj) &&
+                    row.TryGetValue("quantity_changed", out var quantityObj) &&
                     row.TryGetValue("date", out var dateObj))
                 {
                     Modification.Operation operation = (Modification.Operation)Enum.Parse(typeof(Modification.Operation), operationTypeObj.ToString());
@@ -74,9 +77,9 @@ namespace Production_Controll
             foreach (var row in result)
             {
                 if (row.TryGetValue("id", out var idObj) &&
-                    row.TryGetValue("productId", out var productIdObj) &&
-                    row.TryGetValue("operationType", out var operationTypeObj) &&
-                    row.TryGetValue("quantityChanged", out var quantityObj) &&
+                    row.TryGetValue("product_id", out var productIdObj) &&
+                    row.TryGetValue("operation_type", out var operationTypeObj) &&
+                    row.TryGetValue("quantity_changed", out var quantityObj) &&
                     row.TryGetValue("date", out var dateObj))
                 {
                     long id = Convert.ToInt64(idObj);

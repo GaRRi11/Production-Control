@@ -18,6 +18,8 @@ namespace Production_Controll
         private readonly CityService cityService = new CityService();
         private readonly Dictionary<TabPage, int> panelCounts = new Dictionary<TabPage, int>();
 
+
+
         public MainForm()
         {
             InitializeComponent();
@@ -54,16 +56,9 @@ namespace Production_Controll
 
         public TabPage CreateAndAddTabPage(City city)
         {
-            TabPage tabPage = new TabPage(city.name);
-            tabPage.Tag = city.id;
+            TabPage tabPage = this.CreateTabPage(city);
             tabControl1.Controls.Add(tabPage);
             return tabPage;
-        }
-
-        public City SaveCity(string cityName, int capacity)
-        {
-            City city = new City(cityName, capacity);
-            return cityService.SaveCity(city);
         }
 
         private void PanelMouseEnterAndLeave(object sender, bool enter)
@@ -85,7 +80,7 @@ namespace Production_Controll
             PanelMouseEnterAndLeave(sender, false);
         }
 
-        private void AddProductPanel(Product product, TabPage targetTabPage)
+        public void AddProductPanel(Product product, TabPage targetTabPage)
         {
             Panel productPanel = this.CreateProductPanel(product);
 
@@ -104,55 +99,50 @@ namespace Production_Controll
             targetTabPage.Controls.Add(productPanel);
 
             panelCounts[targetTabPage]++;
+
+
         }
 
         private void Panel_Click(object sender, EventArgs e)
-        {
-            if (sender is Panel panel && panel.Tag is Product product)
+        {   
+            if (sender is Panel panel)
             {
-                long productId = product.id;
+                var association = this.GetPanelAssociation(panel);
 
-                using (ProductModifieForm form3 = new ProductModifieForm(this, productId, panel))
+                if (association != null)
                 {
-                    form3.ShowDialog();
+                    long productId = association.productId;
+
+                    using (ProductModifieForm form3 = new ProductModifieForm(this, productId, panel))
+                    {
+                        form3.ShowDialog();
+                    }
                 }
             }
         }
 
-        public Product SaveProduct(string productName, int cityId)
-        {
-            Product product = new Product(productName, cityId);
-            return productService.SaveProduct(product);
-        }
 
         private void ProductionAddBtn_Click(object sender, EventArgs e)
         {
-            int cityId = GetSelectedCityId();
+            long cityId = GetSelectedCityId();
 
-            using (ProductAddForm form2 = new ProductAddForm())
+            using (ProductAddForm form2 = new ProductAddForm(this, cityId))
             {
                 form2.ShowDialog();
-                string productName = form2.productName;
-
-                if (!string.IsNullOrEmpty(productName))
-                {
-                    if (productService.DoesProductExistInCity(productName, cityId))
-                    {
-                        MessageBox.Show($"{productName} already exists in that city");
-                        return;
-                    }
-
-                    Product product = SaveProduct(productName, cityId);
-                    AddProductPanel(product, tabControl1.SelectedTab);
-                }
             }
         }
 
-        private int GetSelectedCityId()
+        private long GetSelectedCityId()
         {
-            if (tabControl1.SelectedTab?.Tag != null && int.TryParse(tabControl1.SelectedTab.Tag.ToString(), out int tabCityId))
+            if (tabControl1.SelectedTab != null)
             {
-                return tabCityId;
+                var association = this.GetTabPageCityAssociationByTabPage(tabControl1.SelectedTab);
+
+                if (association != null)
+                {
+                    long cityId = association.cityId;
+                    return cityId;
+                }
             }
 
             return -1;
@@ -182,12 +172,14 @@ namespace Production_Controll
 
         private void ExcelBtn_Click(object sender, EventArgs e)
         {
-            this.GenerateExcelForAll(tabControl1);
+            List<City> allCities = cityService.GetAllCities();
+            List<Product> allProducts = productService.GetAllProducts(); 
+
+            this.GenerateExcelForAll(allCities, allProducts);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // Additional load logic if needed
         }
     }
 }

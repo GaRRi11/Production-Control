@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Security.Cryptography.Xml;
 
 namespace Production_Controll
@@ -51,22 +52,44 @@ namespace Production_Controll
             ExecuteNonQuery(createModificationTableQuery);
         }
 
-        public void ExecuteNonQuery(string query)
+        public IDbTransaction BeginTransaction()
+        {
+            // Assuming your dbConnection is a valid open connection.
+            if (connection != null && connection.State == ConnectionState.Open)
+            {
+                return connection.BeginTransaction();
+            }
+
+            // Handle the case where the connection is not open.
+            Console.WriteLine("Error: Database connection is not open.");
+            return null;
+        }
+
+
+
+        public bool ExecuteNonQuery(string query, IDictionary<string, object> parameters = null)
         {
             try
             {
                 using (var cmd = new MySqlCommand(query, connection))
                 {
-                    if (connection.State != ConnectionState.Open)
+                    if (parameters != null)
                     {
-                        connection.Open();
+                        foreach (var parameter in parameters)
+                        {
+                            cmd.Parameters.AddWithValue(parameter.Key, parameter.Value);
+                        }
                     }
-                    cmd.ExecuteNonQuery();
+
+                    connection.Open();
+                    int rowsAffected = cmd.ExecuteNonQuery();
+                    return rowsAffected > 0;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error executing non-query: {ex.Message}");
+                return false;
             }
             finally
             {
@@ -75,7 +98,8 @@ namespace Production_Controll
 
         }
 
-            public List<Dictionary<string, object>> ExecuteQuery(string query)
+
+        public List<Dictionary<string, object>> ExecuteQuery(string query)
         {
             var resultList = new List<Dictionary<string, object>>();
             try
