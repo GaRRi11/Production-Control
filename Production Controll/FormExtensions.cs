@@ -66,11 +66,16 @@ namespace Production_Controll
             return tabPage;
         }
 
-        public static void UpdateTabPageText(this Form form, TabPage tabPage,long cityId)
+        public static bool UpdateTabPageText(this Form form, TabPage tabPage,long cityId)
         {
             City city = cityService.FindById(cityId);
+            if(city == null || tabPage == null)
+            {
+                return false;
+            }
             int used = city.capacity - city.availableSpace;
             tabPage.Text = $"{tabPage.Text.Split('(')[0]}({used}/{city.capacity})";
+            return true;
         }
 
         public static Panel CreateProductPanel(this Form form,Product product)
@@ -196,18 +201,20 @@ namespace Production_Controll
             }
         }
 
-        public static void UpdateLabels(this Form form, Panel panelToUpdate,long productId)
+        public static bool UpdateLabels(this Form form, Panel panelToUpdate,long productId)
         {
             Product product = productService.GetProductById(productId);
-
-            if (panelToUpdate != null)
+            
+            if (panelToUpdate != null && product != null)
             {
                 string date = product.lastModified.ToString();
                 int quantity = product.quantity;
 
                 UpdateLabel(panelToUpdate, "quantityLabel", "რაოდენობა: " + quantity);
                 UpdateLabel(panelToUpdate, "centerLabel", "ბოლო რედ." + date);
+                return true;
             }
+            return false;
         }
 
         private static void UpdateLabel(Panel panel, string labelName, string newText)

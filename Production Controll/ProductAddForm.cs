@@ -54,19 +54,21 @@ namespace Production_Controll
                     MessageBox.Show($"{productName} already exists in that city");
                     return;
                 }
-                var association = this.GetTabPageCityAssociationByCity(city.id);
-                TabPage tabPage = new TabPage();
-                if (association != null)
-                {
-                    tabPage = association.TabPage;
-                }
-
                 Product product = new Product(productName, city.id);
                 product = productService.SaveProduct(product);
-                if(product == null) {
+                if (product == null)
+                {
                     MessageBox.Show("Product save failed please try again");
-                    this.Close();
+                    return;
                 }
+                var association = this.GetTabPageCityAssociationByCity(city.id);
+                TabPage tabPage = new TabPage();
+                if (association == null)
+                {
+                    MessageBox.Show("Product save failed please try again");
+                    return;
+                }
+                tabPage = association.TabPage;
                 parentForm.AddProductPanel(product, tabPage);
             }
             this.Close();

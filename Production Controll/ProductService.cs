@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using static Production_Controll.Product;
 
 namespace Production_Controll
@@ -32,20 +33,34 @@ namespace Production_Controll
 
         public Product SaveProduct(Product product)
         {
-                string query = $"INSERT INTO products (name, city_id, quantity, last_modified) " +
-                           $"VALUES ('{product.name}', '{product.cityId}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
-
-            if (dbManager.ExecuteNonQuery(query))
+            using (var transaction = dbManager.BeginTransaction())
             {
-                product.id = GetLastInsertedId();
-                Modification modification = new Modification(product.id, Modification.Operation.CREATE, 0, DateTime.Now);
-                RecordModification(modification);
-                return product;
+                try
+                {
+                    string query = $"INSERT INTO products (name, city_id, quantity, last_modified) " +
+                                   $"VALUES ('{product.name}', '{product.cityId}', {product.quantity}, '{product.lastModified:yyyy-MM-dd HH:mm:ss}');";
+
+                    if (dbManager.ExecuteNonQuery(query))
+                    {
+                        product.id = GetLastInsertedId();
+                        Modification modification = new Modification(product.id, Modification.Operation.CREATE, 0, DateTime.Now);
+                        if (RecordModification(modification))
+                        {
+                            transaction.Commit();
+                            return product;
+                        }
+                    }
+
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error saving product: {ex.Message}");
+                    transaction.Rollback();
+                    return null;
+                }
             }
-
-            return null;
-        }   
-
+        }
         public bool DoesProductExistInCity(string productName, long cityId)
         {
             string query = $"SELECT COUNT(*) AS count FROM products WHERE name = '{productName}' AND city_id = {cityId};";
@@ -66,18 +81,13 @@ namespace Production_Controll
         {
             return new Product(
                 Convert.ToInt64(result["id"]),
-                result["name"].ToString(),
+                Convert.ToString(result["name"]).ToString(),
                 Convert.ToInt32(result["city_id"]),
                 Convert.ToInt32(result["quantity"]),
                 Convert.ToDateTime(result["last_modified"])
             );
         }
 
-        public string GetProductNameById(long id)
-        {
-            var product = GetProductById(id);
-            return product != null ? product.name : string.Empty;
-        }
 
         public bool UpdateQuantity(Modification modification)
         {
@@ -85,6 +95,8 @@ namespace Production_Controll
             long productId = modification.productId;
             Product product = GetProductById(productId);
             long cityId = product.cityId;
+
+            bool success = false;
 
             using (var transaction = dbManager.BeginTransaction())
             {
@@ -95,11 +107,24 @@ namespace Production_Controll
                         string query = $"UPDATE products SET quantity = quantity + {amount}, last_modified = NOW() WHERE id = {productId};";
                         if (dbManager.ExecuteNonQuery(query))
                         {
-                            cityService.UpdateAvailableSpace(cityId, modification);
-                            if (RecordModification(modification))
+                            if (cityService.UpdateAvailableSpace(cityId, modification))
                             {
-                                transaction.Commit();
-                                return true;
+                                if (RecordModification(modification))
+                                {
+                                    success = true;
+                                }
+                                else
+                                {
+                                    // Rollback if RecordModification fails
+                                    transaction.Rollback();
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                // Rollback if UpdateAvailableSpace fails
+                                transaction.Rollback();
+                                return false;
                             }
                         }
                     }
@@ -108,11 +133,24 @@ namespace Production_Controll
                         string query = $"UPDATE products SET quantity = GREATEST(quantity - {amount}, 0), last_modified = NOW() WHERE id = {productId};";
                         if (dbManager.ExecuteNonQuery(query))
                         {
-                            cityService.UpdateAvailableSpace(cityId, modification);
-                            if (RecordModification(modification))
+                            if (cityService.UpdateAvailableSpace(cityId, modification))
                             {
-                                transaction.Commit();
-                                return true;
+                                if (RecordModification(modification))
+                                {
+                                    success = true;
+                                }
+                                else
+                                {
+                                    // Rollback if RecordModification fails
+                                    transaction.Rollback();
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                // Rollback if UpdateAvailableSpace fails
+                                transaction.Rollback();
+                                return false;
                             }
                         }
                     }
@@ -122,10 +160,22 @@ namespace Production_Controll
                     Console.WriteLine($"Error updating quantity: {ex.Message}");
                 }
 
-                transaction.Rollback();
-                return false;
+                if (success)
+                {
+                    transaction.Commit();
+                    dbManager.CloseConnection();
+                    return true;
+                }
+                else
+                {
+                    // Rollback for any unexpected failure
+                    transaction.Rollback();
+                    dbManager.CloseConnection();
+                    return false;
+                }
             }
         }
+
 
 
         public bool CheckQuantityForSubtraction(long id, int amount)
@@ -137,21 +187,35 @@ namespace Production_Controll
 
         public bool DeleteProduct(long id)
         {
-            string query = $"DELETE FROM products WHERE id = {id};";
-            Product product = GetProductById(id);
-            long cityId = product.cityId;
+            using (var transaction = dbManager.BeginTransaction())
+            {
+                try
+                {
+                    string query = $"DELETE FROM products WHERE id = {id};";
+                    Product product = GetProductById(id);
+                    long cityId = product.cityId;
 
-            if (dbManager.ExecuteNonQuery(query)) { 
+                    if (dbManager.ExecuteNonQuery(query))
+                    {
+                        Modification modification = new Modification(id, Modification.Operation.DELETE, product.quantity, DateTime.Now);
+                        cityService.UpdateAvailableSpace(cityId, modification); //akac rollback unda
+                        if (RecordModification(modification))
+                        {
+                            transaction.Commit();
+                            return true;
+                        }
+                    }
 
-                Modification modification = new Modification(id, Modification.Operation.DELETE, product.quantity, DateTime.Now);
-                cityService.UpdateAvailableSpace(cityId, modification);
-                RecordModification(modification);
-                return true;
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deleting product: {ex.Message}");
+                    transaction.Rollback();
+                    return false;
+                }
             }
-
-            return false;
         }
-
 
         private bool RecordModification(Modification modification)
         {
@@ -178,7 +242,7 @@ namespace Production_Controll
                     row.TryGetValue("last_modified", out var lastModifiedObj))
                 {
                     long id = Convert.ToInt64(idObj);
-                    string name = nameObj.ToString();
+                    string name = Convert.ToString(nameObj);
                     int cityId = Convert.ToInt32(cityIdObj);
                     int quantity = Convert.ToInt32(quantityObj);
                     DateTime lastModified = Convert.ToDateTime(lastModifiedObj);

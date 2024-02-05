@@ -16,15 +16,14 @@ namespace Production_Controll
             dbManager = new DatabaseManager();
         }
 
-        public int UpdateAvailableSpace(long cityId, Modification modification)
+        public bool UpdateAvailableSpace(long cityId, Modification modification)
         {
             City city = FindById(cityId);
 
             if (city == null)
             {
-                // Handle the case where the city is not found
                 Console.WriteLine($"City with ID {cityId} not found.");
-                return -1; // or throw an exception
+                return false;
             }
 
             int updatedSpace = city.availableSpace;
@@ -33,34 +32,49 @@ namespace Production_Controll
             {
                 if (modification.quantity > updatedSpace)
                 {
-                    // Handle the case where the subtraction is not possible (optional)
                     Console.WriteLine("Error: Subtraction quantity exceeds available capacity.");
-                    return -1; // or throw an exception
+                    return false;
                 }
                 updatedSpace -= modification.quantity;
             }
             else if (modification.operation == Modification.Operation.Substraction)
             {
-                
                 updatedSpace += modification.quantity;
-
             }
-            else if (modification.operation == Modification.Operation.DELETE) {
+            else if (modification.operation == Modification.Operation.DELETE)
+            {
                 updatedSpace += modification.quantity;
             }
 
             if (updatedSpace < 0)
             {
-                // Handle the case where the updated capacity becomes negative (optional)
                 Console.WriteLine("Error: Updated capacity is negative.");
-                return -1; // or throw an exception
+                return false;
             }
 
             string updateQuery = $"UPDATE city SET available_space = {updatedSpace} WHERE id = {cityId};";
-            dbManager.ExecuteNonQuery(updateQuery);
 
-            return updatedSpace;
+            using (var transaction = dbManager.BeginTransaction())
+            {
+                try
+                {
+                    if (dbManager.ExecuteNonQuery(updateQuery))
+                    {
+                        transaction.Commit();
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating available space: {ex.Message}");
+                }
+
+                // Rollback if the update fails
+                transaction.Rollback();
+                return false;
+            }
         }
+
 
         public City FindById(long cityId)
         {
@@ -81,10 +95,8 @@ namespace Production_Controll
 
                 return new City(id, name, capacity,available_space);
             }
-
-            // Handle the case where the city with the specified ID is not found
-            Console.WriteLine($"City with ID {cityId} not found.");
-            return null; // or throw an exception
+            
+            return null; 
         }
 
 
@@ -112,23 +124,31 @@ namespace Production_Controll
         }
 
 
-
         public City SaveCity(City city)
         {
             string query = $"INSERT INTO city (name, capacity, available_space) " +
                            $"VALUES ('{city.name}', '{city.capacity}', '{city.capacity}');";
 
-            int rowsAffected = dbManager.ExecuteNonQuery(query);
-
-            if (rowsAffected > 0)
+            using (var transaction = dbManager.BeginTransaction())
             {
-                // Insert was successful, update the city ID
-                city.id = GetLastInsertedId();
-                return city;
-            }
+                try
+                {
+                    if (dbManager.ExecuteNonQuery(query))
+                    {
+                        city.id = GetLastInsertedId();
+                        transaction.Commit();
+                        return city;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error saving city: {ex.Message}");
+                }
 
-            // Insert failed
-            return null;
+                // Rollback if the save operation fails
+                transaction.Rollback();
+                return null;
+            }
         }
 
 

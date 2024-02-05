@@ -93,8 +93,16 @@ namespace Production_Controll
                 MessageBox.Show("Product quantity modifie failed please try again");
                 return;
             }
-            this.UpdateLabels(selectedPanel, product.id);
-            this.UpdateTabPageText(GetTabPageByCity(city), city.id);
+            if(this.UpdateLabels(selectedPanel, product.id))
+            {
+                MessageBox.Show("Label text update failed please restart the app");
+                return;
+            }
+            if(!this.UpdateTabPageText(GetTabPageByCity(city), city.id))
+            {
+                MessageBox.Show("TabPage text update failed please restart the app");
+                return;
+            }
             this.Close();
         }
 
@@ -105,8 +113,16 @@ namespace Production_Controll
                 MessageBox.Show("product delete failed please try again");
                 return;
             }
-            parentForm.DeletePanel(selectedPanel);
-            this.UpdateTabPageText(GetTabPageByCity(city), city.id);
+            if (!parentForm.DeletePanel(selectedPanel, city.id))
+            {
+                MessageBox.Show("Panel deletion failed please restart the app");
+                return;
+            }
+            if (!this.UpdateTabPageText(GetTabPageByCity(city), city.id))
+            {
+                MessageBox.Show("TabPage text update failed please restart the app");
+                return;
+            }
             this.Close();
         }
 
@@ -125,7 +141,13 @@ namespace Production_Controll
         private void excelBtn_Click(object sender, EventArgs e)
         {
             List<Modification> modifications = modificationService.GetAllModificationsByProductId(product.id);
-            this.GenerateExcelForOne(product,modifications);
+            if(modifications.Count > 0)
+            {
+                this.GenerateExcelForOne(product, modifications);
+                return;
+            }
+            MessageBox.Show("excel file generation failed please try again");
+            return;
         }
 
     }

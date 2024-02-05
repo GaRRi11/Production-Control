@@ -67,35 +67,5 @@ namespace Production_Controll
 
             return modifications;
         }
-        public List<Modification> GetAllModifications()
-        {
-            string query = "SELECT * FROM modifications;";
-            var result = dbManager.ExecuteQuery(query);
-
-            List<Modification> modifications = new List<Modification>();
-
-            foreach (var row in result)
-            {
-                if (row.TryGetValue("id", out var idObj) &&
-                    row.TryGetValue("product_id", out var productIdObj) &&
-                    row.TryGetValue("operation_type", out var operationTypeObj) &&
-                    row.TryGetValue("quantity_changed", out var quantityObj) &&
-                    row.TryGetValue("date", out var dateObj))
-                {
-                    long id = Convert.ToInt64(idObj);
-                    long productId = Convert.ToInt64(productIdObj);
-                    Modification.Operation operation = (Modification.Operation)Enum.Parse(typeof(Modification.Operation), operationTypeObj.ToString());
-                    int quantity = Convert.ToInt32(quantityObj);
-                    DateTime date = Convert.ToDateTime(dateObj);
-
-                    Modification modification = new Modification(id, productId, operation, quantity, date);
-                    modifications.Add(modification);
-                }
-            }
-
-            return modifications;
-        }
-
-
     }
 }

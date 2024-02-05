@@ -32,25 +32,43 @@ namespace Production_Controll
         private void LoadCitiesAndProducts()
         {
             List<City> cities = cityService.GetAllCities();
-
-            foreach (var city in cities)
+            if(cities.Count > 0)
             {
-                TabPage tabPage = CreateAndAddTabPage(city);
-
-                List<Product> products = productService.GetAllProductsByCityId(city.id);
-
-                foreach (var product in products)
+                foreach (var city in cities)
                 {
-                    AddProductPanel(product, tabPage);
+                    TabPage tabPage = CreateAndAddTabPage(city);
+
+                    List<Product> products = productService.GetAllProductsByCityId(city.id);
+                    if (products.Count > 0)
+                    {
+
+                        foreach (var product in products)
+                        {
+                            AddProductPanel(product, tabPage);
+                            return;
+                        }
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("cities and product load failed please restart the app");
+                        return;
+                    }
                 }
             }
+            else
+            {
+                MessageBox.Show("cities and product load failed please restart the app");
+                return;
+            }
+
         }
 
         private void CityAddbtn_Click(object sender, EventArgs e)
         {
             using (CityAddForm cityAddForm = new CityAddForm(this))
             {
-                    cityAddForm.ShowDialog();
+                cityAddForm.ShowDialog();
             }
         }
 
@@ -82,25 +100,22 @@ namespace Production_Controll
 
         public void AddProductPanel(Product product, TabPage targetTabPage)
         {
-            Panel productPanel = this.CreateProductPanel(product);
+            Panel productPanel = new Panel();
 
+            if (product == null || productPanel == null || targetTabPage == null || panelCounts.ContainsKey(targetTabPage))
+            {
+                MessageBox.Show("Product panel addition failed please restart the app");
+                return;
+            }
+            productPanel = this.CreateProductPanel(product);
             productPanel.Click += Panel_Click;
             productPanel.MouseEnter += Panel_MouseEnter;
             productPanel.MouseLeave += Panel_MouseLeave;
-
-            if (!panelCounts.ContainsKey(targetTabPage))
-            {
-                panelCounts[targetTabPage] = 0;
-            }
-
+            panelCounts[targetTabPage] = 0;
             int yPosition = panelCounts[targetTabPage] * (PanelHeight + PanelMargin);
             productPanel.Location = new Point(0, yPosition);
-
             targetTabPage.Controls.Add(productPanel);
-
             panelCounts[targetTabPage]++;
-
-
         }
 
         private void Panel_Click(object sender, EventArgs e)
@@ -126,6 +141,11 @@ namespace Production_Controll
         {
             long cityId = GetSelectedCityId();
 
+            if (cityId == -1) {
+                MessageBox.Show("Production form open failed please try again");
+                return;
+            }
+
             using (ProductAddForm form2 = new ProductAddForm(this, cityId))
             {
                 form2.ShowDialog();
@@ -148,34 +168,57 @@ namespace Production_Controll
             return -1;
         }
 
-        public void DeletePanel(Panel panel)
+        public bool DeletePanel(Panel panel, long cityId)
         {
-            if (tabControl1.SelectedTab != null && panelCounts.TryGetValue(tabControl1.SelectedTab, out int panelCount))
-            {
-                int removedIndex = tabControl1.SelectedTab.Controls.GetChildIndex(panel);
-                tabControl1.SelectedTab.Controls.Remove(panel);
+            TabPageCityAssociation association = this.GetTabPageCityAssociationByCity(cityId);
 
-                for (int i = removedIndex; i < tabControl1.SelectedTab.Controls.Count; i++)
+            if (association != null)
+            {
+                TabPage tabPage = association.TabPage;
+
+                if (tabPage != null && panelCounts.TryGetValue(tabPage, out int panelCount))
                 {
-                    Control control = tabControl1.SelectedTab.Controls[i];
-                    if (control is Panel)
+                    int removedIndex = tabPage.Controls.GetChildIndex(panel);
+                    tabPage.Controls.Remove(panel);
+
+                    for (int i = removedIndex; i < tabPage.Controls.Count; i++)
                     {
-                        int newYPosition = control.Location.Y - (PanelHeight + PanelMargin);
-                        control.Location = new Point(control.Location.X, newYPosition);
+                        Control control = tabPage.Controls[i];
+                        if (control is Panel)
+                        {
+                            int newYPosition = control.Location.Y - (PanelHeight + PanelMargin);
+                            control.Location = new Point(control.Location.X, newYPosition);
+                        }
                     }
+
+                    panelCount = Math.Max(0, panelCount - 1);
+                    panelCounts[tabPage] = panelCount;
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
 
-                panelCount = Math.Max(0, panelCount - 1);
-                panelCounts[tabControl1.SelectedTab] = panelCount;
             }
+            else
+            {
+                return false;
+            }
+
         }
 
         private void ExcelBtn_Click(object sender, EventArgs e)
         {
             List<City> allCities = cityService.GetAllCities();
             List<Product> allProducts = productService.GetAllProducts(); 
-
-            this.GenerateExcelForAll(allCities, allProducts);
+            if(allCities.Count > 0  && allProducts.Count > 0)
+            {
+                this.GenerateExcelForAll(allCities, allProducts);
+                return;
+            }
+            MessageBox.Show("excel file generation failed please try again");
+            return;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
