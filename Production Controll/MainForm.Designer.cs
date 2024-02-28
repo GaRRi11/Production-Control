@@ -33,6 +33,8 @@
             productionAddBtn = new Button();
             excelBtn = new Button();
             cityAddbtn = new Button();
+            refreshBtn = new Button();
+            emptyBtn = new Button();
             SuspendLayout();
             // 
             // tabControl1
@@ -76,11 +78,35 @@
             cityAddbtn.UseVisualStyleBackColor = true;
             cityAddbtn.Click += CityAddbtn_Click;
             // 
+            // refreshBtn
+            // 
+            refreshBtn.Font = new Font("Segoe UI Black", 10.8F, FontStyle.Bold, GraphicsUnit.Point);
+            refreshBtn.Image = (Image)resources.GetObject("refreshBtn.Image");
+            refreshBtn.Location = new Point(170, 2);
+            refreshBtn.Name = "refreshBtn";
+            refreshBtn.Size = new Size(50, 31);
+            refreshBtn.TabIndex = 12;
+            refreshBtn.UseVisualStyleBackColor = true;
+            refreshBtn.Click += refreshBtn_Click;
+            // 
+            // emptyBtn
+            // 
+            emptyBtn.Font = new Font("Segoe UI Black", 7F, FontStyle.Bold, GraphicsUnit.Point);
+            emptyBtn.Image = Properties.Resources.clean__1_;
+            emptyBtn.Location = new Point(226, 2);
+            emptyBtn.Name = "emptyBtn";
+            emptyBtn.Size = new Size(50, 31);
+            emptyBtn.TabIndex = 13;
+            emptyBtn.UseVisualStyleBackColor = true;
+            emptyBtn.Click += emptyBtn_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(796, 447);
+            Controls.Add(emptyBtn);
+            Controls.Add(refreshBtn);
             Controls.Add(cityAddbtn);
             Controls.Add(excelBtn);
             Controls.Add(productionAddBtn);
@@ -97,5 +123,7 @@
         private Button excelBtn;
         private Button productionAddBtn;
         private Button cityAddbtn;
+        private Button refreshBtn;
+        private Button emptyBtn;
     }
 }

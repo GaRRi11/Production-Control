@@ -45,6 +45,11 @@ namespace Production_Controll
                 MessageBox.Show("type the name of product");
                 return;
             }
+            if (textBox1.Text.All(c => c == '0'))
+            {
+                MessageBox.Show("Please type a valid number.", "Invalid Number", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // Exit the event handler
+            }
             if (string.IsNullOrWhiteSpace(textBox2.Text))
             {
                 MessageBox.Show("type the name of product");

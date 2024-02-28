@@ -17,6 +17,7 @@ namespace Production_Controll
         private MainForm parentForm;
         private ProductService productService;
         private CityService cityService;
+        private ModificationService modificationService;
         private City city;
         public ProductAddForm(MainForm parentForm,long cityId)
         {
@@ -25,6 +26,7 @@ namespace Production_Controll
             this.parentForm = parentForm;
             this.productService = new ProductService();
             this.cityService = new CityService();
+            this.modificationService = new ModificationService();
             this.city = cityService.FindById(cityId);
         }
 
@@ -46,9 +48,13 @@ namespace Production_Controll
                 return;
             }
             productName = textBox1.Text;
-
-            if (!string.IsNullOrEmpty(productName))
+            if(city == null)
             {
+                MessageBox.Show("Product save failed. cannot find city. please try again");
+                return;
+            }
+
+            
                 if (productService.DoesProductExistInCity(productName, city.id))
                 {
                     MessageBox.Show($"{productName} already exists in that city");
@@ -56,7 +62,10 @@ namespace Production_Controll
                 }
                 Product product = new Product(productName, city.id);
                 product = productService.SaveProduct(product);
-                if (product == null)
+                Modification modification = new Modification(product.id, Modification.Operation.CREATE, 0, DateTime.Now);
+                modificationService.SaveModification(modification);
+
+            if (product == null)
                 {
                     MessageBox.Show("Product save failed please try again");
                     return;
@@ -65,12 +74,12 @@ namespace Production_Controll
                 TabPage tabPage = new TabPage();
                 if (association == null)
                 {
-                    MessageBox.Show("Product save failed please try again");
+                    MessageBox.Show("Product panel add failed please restart the app");
                     return;
                 }
                 tabPage = association.TabPage;
                 parentForm.AddProductPanel(product, tabPage);
-            }
+            
             this.Close();
         }
     }

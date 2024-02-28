@@ -37,6 +37,7 @@
             savebtn = new Button();
             deletebtn = new Button();
             productNameLabel = new Label();
+            transferbtn = new Button();
             SuspendLayout();
             // 
             // label1
@@ -122,11 +123,24 @@
             productNameLabel.TabIndex = 15;
             productNameLabel.Text = "label2";
             // 
-            // Form3
+            // transferbtn
+            // 
+            transferbtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
+            transferbtn.Image = Properties.Resources.truck__1_;
+            transferbtn.ImageAlign = ContentAlignment.BottomCenter;
+            transferbtn.Location = new Point(113, 200);
+            transferbtn.Name = "transferbtn";
+            transferbtn.Size = new Size(99, 45);
+            transferbtn.TabIndex = 16;
+            transferbtn.UseVisualStyleBackColor = true;
+            transferbtn.Click += transferbtn_Click;
+            // 
+            // ProductModifieForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(452, 257);
+            Controls.Add(transferbtn);
             Controls.Add(productNameLabel);
             Controls.Add(deletebtn);
             Controls.Add(savebtn);
@@ -135,7 +149,7 @@
             Controls.Add(excelBtn);
             Controls.Add(textBox1);
             Controls.Add(label1);
-            Name = "Form3";
+            Name = "ProductModifieForm";
             Text = "Form3";
             ResumeLayout(false);
             PerformLayout();
@@ -151,5 +165,6 @@
         private Button savebtn;
         private Button deletebtn;
         private Label productNameLabel;
+        private Button transferbtn;
     }
 }

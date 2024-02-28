@@ -16,7 +16,40 @@ namespace Production_Controll
             dbManager = new DatabaseManager();
         }
 
-        public bool UpdateAvailableSpace(long cityId, Modification modification)
+        public bool transferProduct(Modification modification)
+        {
+            long sourceCityId = modification.SourceCityId;
+            long targetCityId = modification.TargetCityId;
+            City sourceCity = FindById(modification.SourceCityId);
+            City targetCity = FindById(modification.TargetCityId);
+            int sourceCityUpdatedSpace = sourceCity.availableSpace + modification.quantity;
+            int targetCityUpdatedSpace = targetCity.availableSpace - modification.quantity;
+
+            string sourceCityUpdateQuery = $"UPDATE city SET available_space = {sourceCityUpdatedSpace} WHERE id = {sourceCityId};";
+            string targetCityUpdateQuery = $"UPDATE city SET available_space = {targetCityUpdatedSpace} WHERE id = {targetCityId};";
+
+
+            // using (var transaction = dbManager.BeginTransaction())
+
+            try
+            {
+                    if (dbManager.ExecuteNonQuery(sourceCityUpdateQuery) && dbManager.ExecuteNonQuery(targetCityUpdateQuery))
+                    {
+                        // transaction.Commit();
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating available space: {ex.Message}");
+                }
+
+                // Rollback if the update fails
+                // transaction.Rollback();
+                return false;
+
+        }
+        public bool UpdateAvailableSpace(long cityId,Modification.Operation operation,int quantity)
         {
             City city = FindById(cityId);
 
@@ -28,22 +61,22 @@ namespace Production_Controll
 
             int updatedSpace = city.availableSpace;
 
-            if (modification.operation == Modification.Operation.Addition)
+            if (operation == Modification.Operation.Addition)
             {
-                if (modification.quantity > updatedSpace)
+                if (quantity > updatedSpace)
                 {
                     Console.WriteLine("Error: Subtraction quantity exceeds available capacity.");
                     return false;
                 }
-                updatedSpace -= modification.quantity;
+                updatedSpace -= quantity;
             }
-            else if (modification.operation == Modification.Operation.Substraction)
+            else if (operation == Modification.Operation.Substraction)
             {
-                updatedSpace += modification.quantity;
+                updatedSpace += quantity;
             }
-            else if (modification.operation == Modification.Operation.DELETE)
+            else if (operation == Modification.Operation.DELETE)
             {
-                updatedSpace += modification.quantity;
+                updatedSpace += quantity;
             }
 
             if (updatedSpace < 0)
@@ -54,13 +87,13 @@ namespace Production_Controll
 
             string updateQuery = $"UPDATE city SET available_space = {updatedSpace} WHERE id = {cityId};";
 
-            using (var transaction = dbManager.BeginTransaction())
+           // using (var transaction = dbManager.BeginTransaction())
             {
                 try
                 {
                     if (dbManager.ExecuteNonQuery(updateQuery))
                     {
-                        transaction.Commit();
+                       // transaction.Commit();
                         return true;
                     }
                 }
@@ -70,7 +103,7 @@ namespace Production_Controll
                 }
 
                 // Rollback if the update fails
-                transaction.Rollback();
+               // transaction.Rollback();
                 return false;
             }
         }
@@ -79,23 +112,30 @@ namespace Production_Controll
         public City FindById(long cityId)
         {
             string query = $"SELECT * FROM city WHERE id = {cityId};";
-            var result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
-            if (result.Count > 0 &&
-                result[0].TryGetValue("id", out var idObj) &&
-                result[0].TryGetValue("name", out var nameObj) &&
-                result[0].TryGetValue("capacity", out var capacityObj) &&
-                result[0].TryGetValue("available_space", out var available_spaceObj))
+            if (resultList == null)
             {
-                long id = Convert.ToInt64(idObj);
-                string name = nameObj.ToString();
-                int capacity = Convert.ToInt32(capacityObj);
-                int available_space = Convert.ToInt32(available_spaceObj);
-
-
-                return new City(id, name, capacity,available_space);
+                return null; // Return null if there's an issue with database connectivity or finding the table
             }
-            
+
+            if (rowsAffected)
+            {
+                if (resultList.Count > 0 &&
+                                resultList[0].TryGetValue("id", out var idObj) &&
+                                resultList[0].TryGetValue("name", out var nameObj) &&
+                                resultList[0].TryGetValue("capacity", out var capacityObj) &&
+                                resultList[0].TryGetValue("available_space", out var available_spaceObj))
+                {
+                    long id = Convert.ToInt64(idObj);
+                    string name = nameObj.ToString();
+                    int capacity = Convert.ToInt32(capacityObj);
+                    int available_space = Convert.ToInt32(available_spaceObj);
+
+
+                    return new City(id, name, capacity, available_space);
+                }
+            }
             return null; 
         }
 
@@ -103,25 +143,48 @@ namespace Production_Controll
         public long GetLastInsertedId()
         {
             string query = "SELECT LAST_INSERT_ID();";
-            List<Dictionary<string, object>> result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
-            if (result.Count > 0 && result[0].ContainsKey("LAST_INSERT_ID()"))
+            if (resultList == null)
             {
-                return Convert.ToInt64(result[0]["LAST_INSERT_ID()"]);
+                // Handle database connectivity or table not found issue
+                Console.WriteLine("Error retrieving last inserted ID: Database connectivity issue.");
+                return -1;
             }
 
-            // Handle the case where the ID retrieval fails (optional)
-            Console.WriteLine("Error retrieving last inserted ID.");
-            return -1; // or throw an exception
+            if (!rowsAffected || !resultList[0].ContainsKey("LAST_INSERT_ID()"))
+            {
+                // Handle case where no rows are affected or "LAST_INSERT_ID()" key not found
+                Console.WriteLine("Error retrieving last inserted ID: No rows affected or key not found.");
+                return -1;
+            }
+
+            return Convert.ToInt64(resultList[0]["LAST_INSERT_ID()"]);
         }
+
 
         public bool IsCityNameUnique(string cityName)
         {
             string query = $"SELECT COUNT(*) AS count FROM city WHERE name = '{cityName}';";
-            var result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
-            return result.Count > 0 && result[0].ContainsKey("count") && Convert.ToInt32(result[0]["count"]) == 0;
+            if (resultList == null)
+            {
+                // Handle database connectivity or table not found issue
+                Console.WriteLine("Error querying city table: Database connectivity issue.");
+                return false;
+            }
+
+            if (!rowsAffected || !resultList[0].ContainsKey("count"))
+            {
+                // Handle case where no rows are affected or "count" key not found
+                Console.WriteLine("Error querying city table: No rows affected or key not found.");
+                return false;
+            }
+
+            return Convert.ToInt32(resultList[0]["count"]) == 0;
         }
+
 
 
         public City SaveCity(City city)
@@ -129,14 +192,14 @@ namespace Production_Controll
             string query = $"INSERT INTO city (name, capacity, available_space) " +
                            $"VALUES ('{city.name}', '{city.capacity}', '{city.capacity}');";
 
-            using (var transaction = dbManager.BeginTransaction())
+            //using (var transaction = dbManager.BeginTransaction())
             {
                 try
                 {
                     if (dbManager.ExecuteNonQuery(query))
                     {
                         city.id = GetLastInsertedId();
-                        transaction.Commit();
+                        //transaction.Commit();
                         return city;
                     }
                 }
@@ -146,20 +209,54 @@ namespace Production_Controll
                 }
 
                 // Rollback if the save operation fails
-                transaction.Rollback();
+                //transaction.Rollback();
                 return null;
             }
         }
+
+        public bool CityExists(long targetCityId)
+        {
+            string query = $"SELECT COUNT(*) AS count FROM city WHERE id = {targetCityId};";
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                // Handle database connectivity or table not found issue
+                Console.WriteLine("Error querying city table: Database connectivity issue.");
+                return false;
+            }
+
+            if (!rowsAffected || !resultList[0].ContainsKey("count"))
+            {
+                // Handle case where no rows are affected or "count" key not found
+                Console.WriteLine("Error querying city table: No rows affected or key not found.");
+                return false;
+            }
+
+            return Convert.ToInt32(resultList[0]["count"]) > 0;
+        }
+
 
 
         public List<City> GetAllCities()
         {
             string query = "SELECT * FROM city;";
-            var result = dbManager.ExecuteQuery(query);
+
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                return null; // Return null if there's an issue with database connectivity or finding the table
+            }
+
+            if (!rowsAffected)
+            {
+                return new List<City>(); // Return an empty list if the table is empty
+            }
 
             List<City> cities = new List<City>();
 
-            foreach (var row in result)
+            foreach (var row in resultList)
             {
                 if (row.TryGetValue("id", out var idObj) &&
                     row.TryGetValue("name", out var nameObj) &&

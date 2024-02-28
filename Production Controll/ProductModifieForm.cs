@@ -6,7 +6,6 @@ namespace Production_Controll
 {
     public partial class ProductModifieForm : Form
     {
-        private long productId;
         private City city;
         private Product product;
         private ProductService productService;
@@ -20,13 +19,12 @@ namespace Production_Controll
         {
             InitializeComponent();
             this.AcceptButton = savebtn;
-            textBox1.KeyPress += textBox1_KeyPress; 
+            textBox1.KeyPress += textBox1_KeyPress;
         }
 
         public ProductModifieForm(MainForm parent, long productId, Panel selectedPanel)
             : this()
         {
-            this.productId = productId;
             this.parentForm = parent;
             this.selectedPanel = selectedPanel;
             this.productService = new ProductService();
@@ -66,9 +64,10 @@ namespace Production_Controll
                 ? Modification.Operation.Addition
                 : Modification.Operation.Substraction;
 
-            Modification modification = new Modification(productId, operation, quantity, DateTime.Now);
+            Modification modification = new Modification(product.id, operation, quantity, DateTime.Now);
 
-            if (operation == Modification.Operation.Addition) {
+            if (operation == Modification.Operation.Addition)
+            {
 
                 if (quantity > city.availableSpace)
                 {
@@ -78,7 +77,7 @@ namespace Production_Controll
 
             }
 
-                if (operation == Modification.Operation.Substraction)
+            if (operation == Modification.Operation.Substraction)
             {
                 if (!productService.CheckQuantityForSubtraction(product.id, quantity))
                 {
@@ -87,18 +86,19 @@ namespace Production_Controll
                 }
             }
 
+            modificationService.SaveModification(modification);
 
-            if (!productService.UpdateQuantity(modification))
+            if (!productService.UpdateQuantity(product.id, modification.operation, quantity))
             {
                 MessageBox.Show("Product quantity modifie failed please try again");
                 return;
             }
-            if(this.UpdateLabels(selectedPanel, product.id))
+            if (!this.UpdateLabels(selectedPanel, product.id))
             {
                 MessageBox.Show("Label text update failed please restart the app");
                 return;
             }
-            if(!this.UpdateTabPageText(GetTabPageByCity(city), city.id))
+            if (!this.UpdateTabPageText(GetTabPageByCity(city), city.id))
             {
                 MessageBox.Show("TabPage text update failed please restart the app");
                 return;
@@ -107,8 +107,12 @@ namespace Production_Controll
         }
 
         private void deletebtn_Click(object sender, EventArgs e)
+
         {
-            if (!productService.DeleteProduct(productId))
+            Modification modification = new Modification(product.id, Modification.Operation.DELETE, product.quantity, DateTime.Now);
+            modificationService.SaveModification(modification);
+
+            if (!productService.DeleteProduct(product.id))
             {
                 MessageBox.Show("product delete failed please try again");
                 return;
@@ -141,7 +145,7 @@ namespace Production_Controll
         private void excelBtn_Click(object sender, EventArgs e)
         {
             List<Modification> modifications = modificationService.GetAllModificationsByProductId(product.id);
-            if(modifications.Count > 0)
+            if (modifications.Count > 0)
             {
                 this.GenerateExcelForOne(product, modifications);
                 return;
@@ -150,5 +154,12 @@ namespace Production_Controll
             return;
         }
 
+        private void transferbtn_Click(object sender, EventArgs e)
+        {
+            using (ProductTransferForm productTransferForm = new ProductTransferForm(parentForm, selectedPanel, product))
+            {
+                productTransferForm.ShowDialog();
+            }
+        }
     }
 }

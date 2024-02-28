@@ -54,6 +54,18 @@ namespace Production_Controll
             }
             return null;
         }
+        public static Panel FindPanelByProductId(this Form form, long productId)
+        {
+            foreach (var association in panelAssociations.Values)
+            {
+                if (association.productId == productId)
+                {
+                    return association.Panel;
+                }
+            }
+            return null;
+        }
+
 
         public static TabPage CreateTabPage(this Form form, City city)
         {
@@ -216,6 +228,26 @@ namespace Production_Controll
             }
             return false;
         }
+
+        public static void UpdateAllPanelLabelsAndTabPages(this Form form)
+        {
+            // Update panel labels
+            foreach (var association in panelAssociations.Values)
+            {
+                Panel panel = association.Panel;
+                long productId = association.productId;
+                form.UpdateLabels(panel, productId);
+            }
+
+            // Update tab page texts
+            foreach (var tabPageAssociation in tabPageCityAssociations)
+            {
+                TabPage tabPage = tabPageAssociation.Key;
+                long cityId = tabPageAssociation.Value.cityId;
+                form.UpdateTabPageText(tabPage, cityId);
+            }
+        }
+
 
         private static void UpdateLabel(Panel panel, string labelName, string newText)
         {

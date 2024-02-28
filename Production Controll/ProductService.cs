@@ -16,24 +16,141 @@ namespace Production_Controll
             modificationService = new ModificationService();
         }
 
+        public bool TransferProductToCity(long productId, int quantity, long targetCityId)
+        {
+            try
+            {
+                // Retrieve the product details
+                Product product = GetProductById(productId);
+                if (product == null)
+                {
+                    Console.WriteLine($"Product with ID {productId} not found.");
+                    return false;
+                }
+
+                // Check if the target city exists
+                if (!cityService.CityExists(targetCityId))
+                {
+                    Console.WriteLine($"City with ID {targetCityId} not found.");
+                    return false;
+                }
+
+                // Check if the product is already in the target city
+                if (product.cityId == targetCityId)
+                {
+                    Console.WriteLine("The product is already in the target city.");
+                    return false;
+                }
+
+                // Check if the product quantity is sufficient for transfer
+                if (product.quantity < quantity)
+                {
+                    Console.WriteLine("Insufficient quantity for transfer.");
+                    return false;
+                }
+
+                // Begin transaction
+               // using (var transaction = dbManager.BeginTransaction())
+                {
+                    // Deduct quantity from current city
+                    if (!UpdateQuantity(product.id, Modification.Operation.Substraction, quantity))
+                    {
+                        // Rollback transaction if quantity deduction fails
+                       // transaction.Rollback();
+                        return false;
+                    }
+
+                    // Check if the product already exists in the target city
+                    if (DoesProductExistInCity(product.name, targetCityId))
+                    {
+                        Product existingProduct = GetProductByNameAndCityId(product.name,targetCityId);
+                        // Add quantity to existing product in target city
+                        if (!UpdateQuantity(existingProduct.id, Modification.Operation.Addition, quantity))
+                        {
+                            // Rollback transaction if quantity addition fails
+                          //  transaction.Rollback();
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // Create new product in target city
+                        Product newProduct = new Product(product.name, targetCityId);
+                        newProduct = SaveProduct(newProduct);
+                        if (newProduct == null)
+                        {
+                            // Rollback transaction if new product creation fails
+                            //transaction.Rollback();
+                            return false;
+                        }
+                        // Add quantity to new product in target city
+                        if (!UpdateQuantity(newProduct.id, Modification.Operation.Addition, quantity))
+                        {
+                            // Rollback transaction if quantity addition fails
+                            //transaction.Rollback();
+                            return false;
+                        }
+                    }
+
+                    // Commit transaction
+                   // transaction.Commit();
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error transferring product to city: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        public Product GetProductByName(string productName)
+        {
+            string query = $"SELECT * FROM products WHERE name = '{productName}';";
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                return null; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected)
+            {
+                return null; // Return null if no rows are affected
+            }
+
+            return resultList.Count > 0 ? ExtractProductFromResult(resultList[0]) : null;
+        }
+
+
+
         public long GetLastInsertedId()
         {
             string query = "SELECT LAST_INSERT_ID();";
-            List<Dictionary<string, object>> result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
-            if (result.Count > 0 && result[0].ContainsKey("LAST_INSERT_ID()"))
+            if (resultList == null)
             {
-                return Convert.ToInt64(result[0]["LAST_INSERT_ID()"]);
+                // Handle database connectivity or table not found issue
+                Console.WriteLine("Error retrieving last inserted ID: Database connectivity issue.");
+                return -1;
             }
 
-            // Handle the case where the ID retrieval fails (optional)
-            Console.WriteLine("Error retrieving last inserted ID.");
-            return -1; // or throw an exception
+            if (!rowsAffected || !resultList[0].ContainsKey("LAST_INSERT_ID()"))
+            {
+                // Handle case where no rows are affected or "LAST_INSERT_ID()" key not found
+                Console.WriteLine("Error retrieving last inserted ID: No rows affected or key not found.");
+                return -1;
+            }
+
+            return Convert.ToInt64(resultList[0]["LAST_INSERT_ID()"]);
         }
+
 
         public Product SaveProduct(Product product)
         {
-            using (var transaction = dbManager.BeginTransaction())
+           // using (var transaction = dbManager.BeginTransaction())
             {
                 try
                 {
@@ -43,12 +160,10 @@ namespace Production_Controll
                     if (dbManager.ExecuteNonQuery(query))
                     {
                         product.id = GetLastInsertedId();
-                        Modification modification = new Modification(product.id, Modification.Operation.CREATE, 0, DateTime.Now);
-                        if (RecordModification(modification))
-                        {
-                            transaction.Commit();
+                        
+                            //transaction.Commit();
                             return product;
-                        }
+                        
                     }
 
                     return null;
@@ -56,7 +171,7 @@ namespace Production_Controll
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error saving product: {ex.Message}");
-                    transaction.Rollback();
+                    //transaction.Rollback();
                     return null;
                 }
             }
@@ -64,18 +179,39 @@ namespace Production_Controll
         public bool DoesProductExistInCity(string productName, long cityId)
         {
             string query = $"SELECT COUNT(*) AS count FROM products WHERE name = '{productName}' AND city_id = {cityId};";
-            var result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
-            return result.Count > 0 && result[0].ContainsKey(key: "count") && Convert.ToInt32(result[0]["count"]) > 0;
+            if (resultList == null)
+            {
+                return false; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected || !resultList[0].ContainsKey("count"))
+            {
+                return false; // Return false if no rows are affected or "count" key not found
+            }
+
+            return Convert.ToInt32(resultList[0]["count"]) > 0;
         }
 
         public Product GetProductById(long id)
         {
             string query = $"SELECT * FROM products WHERE id = {id};";
-            var result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
-            return result.Count > 0 ? ExtractProductFromResult(result[0]) : null;
+            if (resultList == null)
+            {
+                return null; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected)
+            {
+                return null; // Return null if no rows are affected
+            }
+
+            return resultList.Count > 0 ? ExtractProductFromResult(resultList[0]) : null;
         }
+
 
         private Product ExtractProductFromResult(Dictionary<string, object> result)
         {
@@ -89,67 +225,47 @@ namespace Production_Controll
         }
 
 
-        public bool UpdateQuantity(Modification modification)
+        public bool UpdateQuantity(long productId, Modification.Operation operation,int quantity)
         {
-            int amount = modification.quantity;
-            long productId = modification.productId;
+            int amount = quantity;
             Product product = GetProductById(productId);
             long cityId = product.cityId;
 
             bool success = false;
 
-            using (var transaction = dbManager.BeginTransaction())
+           // using (var transaction = dbManager.BeginTransaction())
             {
                 try
                 {
-                    if (modification.operation == Modification.Operation.Addition)
+                    if (operation == Modification.Operation.Addition)
                     {
                         string query = $"UPDATE products SET quantity = quantity + {amount}, last_modified = NOW() WHERE id = {productId};";
                         if (dbManager.ExecuteNonQuery(query))
                         {
-                            if (cityService.UpdateAvailableSpace(cityId, modification))
+                            if (cityService.UpdateAvailableSpace(cityId, operation, quantity))
                             {
-                                if (RecordModification(modification))
-                                {
-                                    success = true;
-                                }
-                                else
-                                {
-                                    // Rollback if RecordModification fails
-                                    transaction.Rollback();
-                                    return false;
-                                }
+                                return true;
                             }
                             else
                             {
-                                // Rollback if UpdateAvailableSpace fails
-                                transaction.Rollback();
                                 return false;
                             }
+                            
                         }
                     }
-                    else if (modification.operation == Modification.Operation.Substraction)
+                    else if (operation == Modification.Operation.Substraction)
                     {
                         string query = $"UPDATE products SET quantity = GREATEST(quantity - {amount}, 0), last_modified = NOW() WHERE id = {productId};";
                         if (dbManager.ExecuteNonQuery(query))
                         {
-                            if (cityService.UpdateAvailableSpace(cityId, modification))
+                            if (cityService.UpdateAvailableSpace(cityId, operation, quantity))
                             {
-                                if (RecordModification(modification))
-                                {
-                                    success = true;
-                                }
-                                else
-                                {
-                                    // Rollback if RecordModification fails
-                                    transaction.Rollback();
-                                    return false;
-                                }
+                                return true;
                             }
                             else
                             {
                                 // Rollback if UpdateAvailableSpace fails
-                                transaction.Rollback();
+                               // transaction.Rollback();
                                 return false;
                             }
                         }
@@ -162,15 +278,15 @@ namespace Production_Controll
 
                 if (success)
                 {
-                    transaction.Commit();
-                    dbManager.CloseConnection();
+                    //transaction.Commit();
+                    //dbManager.CloseConnection();
                     return true;
                 }
                 else
                 {
                     // Rollback for any unexpected failure
-                    transaction.Rollback();
-                    dbManager.CloseConnection();
+                   // transaction.Rollback();
+                   // dbManager.CloseConnection();
                     return false;
                 }
             }
@@ -181,29 +297,45 @@ namespace Production_Controll
         public bool CheckQuantityForSubtraction(long id, int amount)
         {
             string query = $"SELECT quantity >= {amount} AS result FROM products WHERE id = {id};";
-            var result = dbManager.ExecuteQuery(query);
-            return result.Count > 0 && result[0].ContainsKey("result") && Convert.ToBoolean(result[0]["result"]);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                return false; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected || !resultList[0].ContainsKey("result"))
+            {
+                return false; // Return false if no rows are affected or "result" key not found
+            }
+
+            return Convert.ToBoolean(resultList[0]["result"]);
         }
+
 
         public bool DeleteProduct(long id)
         {
-            using (var transaction = dbManager.BeginTransaction())
+            // using (var transaction = dbManager.BeginTransaction())
             {
                 try
                 {
+                    // First, delete related modifications
+                    if (!modificationService.DeleteModificationsByProductId(id))
+                    {
+                        // Handle error deleting modifications
+                        Console.WriteLine($"Error deleting modifications related to product with ID {id}.");
+                        return false;
+                    }
+
+                    // Then, delete the product
                     string query = $"DELETE FROM products WHERE id = {id};";
                     Product product = GetProductById(id);
                     long cityId = product.cityId;
 
                     if (dbManager.ExecuteNonQuery(query))
                     {
-                        Modification modification = new Modification(id, Modification.Operation.DELETE, product.quantity, DateTime.Now);
-                        cityService.UpdateAvailableSpace(cityId, modification); //akac rollback unda
-                        if (RecordModification(modification))
-                        {
-                            transaction.Commit();
-                            return true;
-                        }
+                        cityService.UpdateAvailableSpace(cityId, Modification.Operation.DELETE, product.quantity); //akac rollback unda
+                        return true;
                     }
 
                     return false;
@@ -211,29 +343,35 @@ namespace Production_Controll
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error deleting product: {ex.Message}");
-                    transaction.Rollback();
+                    //transaction.Rollback();
                     return false;
                 }
             }
         }
 
-        private bool RecordModification(Modification modification)
-        {
-             if(modificationService.SaveModification(modification) == null)
-            {
-                return false;
-            }
-             return true;
-        }
+
+
+        
+
 
         public List<Product> GetAllProducts()
         {
             string query = "SELECT * FROM products;";
-            var result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                return null; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected)
+            {
+                return new List<Product>(); // Return empty list if table is empty
+            }
 
             List<Product> products = new List<Product>();
 
-            foreach (var row in result)
+            foreach (var row in resultList)
             {
                 if (row.TryGetValue("id", out var idObj) &&
                     row.TryGetValue("name", out var nameObj) &&
@@ -255,15 +393,76 @@ namespace Production_Controll
             return products;
         }
 
+        public Product GetProductByNameAndCityId(string productName, long cityId)
+        {
+            string query = $"SELECT * FROM products WHERE name = '{productName}' AND city_id = {cityId};";
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                return null; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected)
+            {
+                return null; // Return null if no rows are affected
+            }
+
+            return resultList.Count > 0 ? ExtractProductFromResult(resultList[0]) : null;
+        }
+
+        public bool DeleteAllProductsInCity(long cityId)
+        {
+            try
+            {
+                // Construct the SQL query to delete all products in the given city
+                string query = $"DELETE FROM products WHERE city_id = {cityId};";
+
+                // Execute the SQL query
+                bool success = dbManager.ExecuteNonQuery(query);
+
+                if (success)
+                {
+                    // If deletion is successful, return true
+                    return true;
+                }
+                else
+                {
+                    // If deletion fails, return false
+                    Console.WriteLine("Failed to delete products from the city.");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that occur during the deletion process
+                Console.WriteLine($"Error deleting products from the city: {ex.Message}");
+                return false;
+            }
+        }
+
+
+
+
 
         public List<Product> GetAllProductsByCityId(long cityId)
         {
             string query = $"SELECT * FROM products WHERE city_id = {cityId};";
-            var result = dbManager.ExecuteQuery(query);
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null)
+            {
+                return null; // Handle database connectivity or table not found issue
+            }
+
+            if (!rowsAffected)
+            {
+                return new List<Product>(); // Return empty list if table is empty
+            }
 
             List<Product> products = new List<Product>();
 
-            foreach (var row in result)
+            foreach (var row in resultList)
             {
                 if (row.TryGetValue("id", out var idObj) &&
                     row.TryGetValue("name", out var nameObj) &&
