@@ -93,16 +93,7 @@ namespace Production_Controll
                 MessageBox.Show("Product quantity modifie failed please try again");
                 return;
             }
-            if (!this.UpdateLabels(selectedPanel, product.id))
-            {
-                MessageBox.Show("Label text update failed please restart the app");
-                return;
-            }
-            if (!this.UpdateTabPageText(GetTabPageByCity(city), city.id))
-            {
-                MessageBox.Show("TabPage text update failed please restart the app");
-                return;
-            }
+            parentForm.RefreshTabPagesAndPanelsFromDatabase();
             this.Close();
         }
 
@@ -117,16 +108,7 @@ namespace Production_Controll
                 MessageBox.Show("product delete failed please try again");
                 return;
             }
-            if (!parentForm.DeletePanel(selectedPanel, city.id))
-            {
-                MessageBox.Show("Panel deletion failed please restart the app");
-                return;
-            }
-            if (!this.UpdateTabPageText(GetTabPageByCity(city), city.id))
-            {
-                MessageBox.Show("TabPage text update failed please restart the app");
-                return;
-            }
+            parentForm.RefreshTabPagesAndPanelsFromDatabase();
             this.Close();
         }
 
@@ -142,23 +124,19 @@ namespace Production_Controll
             return null;
         }
 
-        private void excelBtn_Click(object sender, EventArgs e)
-        {
-            List<Modification> modifications = modificationService.GetAllModificationsByProductId(product.id);
-            if (modifications.Count > 0)
-            {
-                this.GenerateExcelForOne(product, modifications);
-                return;
-            }
-            MessageBox.Show("excel file generation failed please try again");
-            return;
-        }
-
         private void transferbtn_Click(object sender, EventArgs e)
         {
             using (ProductTransferForm productTransferForm = new ProductTransferForm(parentForm, selectedPanel, product))
             {
                 productTransferForm.ShowDialog();
+            }
+        }
+
+        private void historyBtn_Click(object sender, EventArgs e)
+        {
+            using(ProductHistoryForm productHistoryForm = new ProductHistoryForm(product))
+            {
+                productHistoryForm.ShowDialog();
             }
         }
     }

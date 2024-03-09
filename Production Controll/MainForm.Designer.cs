@@ -35,6 +35,8 @@
             cityAddbtn = new Button();
             refreshBtn = new Button();
             emptyBtn = new Button();
+            editBtn = new Button();
+            groupBtn = new Button();
             SuspendLayout();
             // 
             // tabControl1
@@ -100,11 +102,35 @@
             emptyBtn.UseVisualStyleBackColor = true;
             emptyBtn.Click += emptyBtn_Click;
             // 
+            // editBtn
+            // 
+            editBtn.Font = new Font("Segoe UI Black", 7F, FontStyle.Bold, GraphicsUnit.Point);
+            editBtn.Image = (Image)resources.GetObject("editBtn.Image");
+            editBtn.Location = new Point(282, 2);
+            editBtn.Name = "editBtn";
+            editBtn.Size = new Size(50, 31);
+            editBtn.TabIndex = 14;
+            editBtn.UseVisualStyleBackColor = true;
+            editBtn.Click += editBtn_Click;
+            // 
+            // groupBtn
+            // 
+            groupBtn.Font = new Font("Segoe UI Black", 10.8F, FontStyle.Bold, GraphicsUnit.Point);
+            groupBtn.Image = Properties.Resources.product__1_;
+            groupBtn.Location = new Point(743, 2);
+            groupBtn.Name = "groupBtn";
+            groupBtn.Size = new Size(50, 31);
+            groupBtn.TabIndex = 15;
+            groupBtn.UseVisualStyleBackColor = true;
+            groupBtn.Click += groupBtn_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(796, 447);
+            Controls.Add(groupBtn);
+            Controls.Add(editBtn);
             Controls.Add(emptyBtn);
             Controls.Add(refreshBtn);
             Controls.Add(cityAddbtn);
@@ -125,5 +151,7 @@
         private Button cityAddbtn;
         private Button refreshBtn;
         private Button emptyBtn;
+        private Button editBtn;
+        private Button groupBtn;
     }
 }

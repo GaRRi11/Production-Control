@@ -14,7 +14,7 @@ namespace Production_Controll
 
         public long GetLastInsertedId()
         {
-            string query = "SELECT LAST_INSERT_ID();";
+            string query = "SELECT LAST_INSERT_ID() FROM production_control.modifications;";
             var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
             if (resultList == null)
@@ -40,8 +40,8 @@ namespace Production_Controll
             string operationType = modification.operation.ToString();
             string formattedDate = modification.date.ToString("yyyy-MM-dd HH:mm:ss");
 
-            string query = $"INSERT INTO modifications (product_id, operation_type, quantity_changed, date) " +
-                           $"VALUES ({modification.productId}, '{operationType}', {modification.quantity}, '{formattedDate}');";
+            string query = $"INSERT INTO modifications (product_id, operation_type,source_city_id,target_city_id, quantity_changed, date) " +
+                           $"VALUES ({modification.productId}, '{operationType}',{modification.SourceCityId},{modification.TargetCityId}, {modification.quantity}, '{formattedDate}');";
             if (dbManager.ExecuteNonQuery(query))
             {
                 modification.id = GetLastInsertedId();

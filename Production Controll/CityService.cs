@@ -142,7 +142,7 @@ namespace Production_Controll
 
         public long GetLastInsertedId()
         {
-            string query = "SELECT LAST_INSERT_ID();";
+            string query = "SELECT LAST_INSERT_ID() FROM production_control.city;";
             var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
             if (resultList == null)
@@ -235,6 +235,44 @@ namespace Production_Controll
 
             return Convert.ToInt32(resultList[0]["count"]) > 0;
         }
+
+        public bool modify(long cityId, string newName, int newCapacity)
+        {
+            // Retrieve the city information
+            City city = FindById(cityId);
+
+            if (city == null)
+            {
+                Console.WriteLine($"City with ID {cityId} not found.");
+                return false;
+            }
+
+            // Update the city's name and capacity
+            int usedSpace = city.capacity - city.availableSpace;
+            city.name = newName;
+            city.capacity = newCapacity;
+            int availableSpace = city.capacity - usedSpace;
+
+
+            // Execute the SQL query to update the city information in the database
+            string updateQuery = $"UPDATE city SET name = '{newName}', capacity = {newCapacity}, available_space = {availableSpace} WHERE id = {cityId};";
+
+            try
+            {
+                // Execute the update query
+                if (dbManager.ExecuteNonQuery(updateQuery))
+                {
+                    return true; // Return true if the update is successful
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating city information: {ex.Message}");
+            }
+
+            return false; // Return false if the update fails
+        }
+
 
 
 

@@ -127,7 +127,7 @@ namespace Production_Controll
 
         public long GetLastInsertedId()
         {
-            string query = "SELECT LAST_INSERT_ID();";
+            string query = "SELECT LAST_INSERT_ID() FROM production_control.product;";
             var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
             if (resultList == null)
@@ -415,22 +415,30 @@ namespace Production_Controll
         {
             try
             {
-                // Construct the SQL query to delete all products in the given city
-                string query = $"DELETE FROM products WHERE city_id = {cityId};";
+                // Get all products in the given city
+                List<Product> products = GetAllProductsByCityId(cityId);
 
-                // Execute the SQL query
-                bool success = dbManager.ExecuteNonQuery(query);
-
-                if (success)
+                if (products != null)
                 {
-                    // If deletion is successful, return true
+                    foreach (var product in products)
+                    {
+                        // Delete each product using the DeleteProduct method
+                        if (!DeleteProduct(product.id))
+                        {
+                            // If any product deletion fails, return false
+                            Console.WriteLine($"Failed to delete product with ID {product.id} from the city.");
+                            return false;
+                        }
+                    }
+
+                    // If all products are successfully deleted, return true
                     return true;
                 }
                 else
                 {
-                    // If deletion fails, return false
-                    Console.WriteLine("Failed to delete products from the city.");
-                    return false;
+                    // If no products found in the city, return true
+                    Console.WriteLine("No products found in the city.");
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -440,6 +448,7 @@ namespace Production_Controll
                 return false;
             }
         }
+
 
 
 

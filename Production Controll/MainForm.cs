@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows.Forms;
 using OfficeOpenXml;
 using MySql.Data.MySqlClient;
+using static Production_Controll.Product;
 
 namespace Production_Controll
 {
@@ -26,7 +27,7 @@ namespace Production_Controll
             productService = new ProductService();
             databaseManager = new DatabaseManager();
             databaseManager.InitializeDB();
-            LoadCitiesAndProducts();
+            RefreshTabPagesAndPanelsFromDatabase();
         }
 
         public void LoadCitiesAndProducts()
@@ -52,10 +53,9 @@ namespace Production_Controll
                     {
                         foreach (var product in products)
                         {
-                            if (!IsProductPanelAdded(product.id))
-                            {
-                                AddProductPanel(product, tabPage);
-                            }
+
+                            AddProductPanel(product, tabPage);
+
                         }
                     }
                     else
@@ -72,6 +72,34 @@ namespace Production_Controll
             }
         }
 
+        public void RefreshTabPagesAndPanelsFromDatabase()
+        {
+            // Remove all TabPages and associated associations
+            foreach (TabPage tabPage in tabControl1.TabPages.OfType<TabPage>().ToList())
+            {
+                // Remove all panels in the TabPage and their associations
+                foreach (Panel panel in tabPage.Controls.OfType<Panel>().ToList())
+                {
+                    tabPage.Controls.Remove(panel); // Remove the Panel from the TabPage
+                    this.ClearPanelAssociations();
+
+                }
+
+                // Remove the association for the TabPage
+                this.ClearTabPageAssociations();
+
+                // Remove the TabPage from the tabControl
+                tabControl1.TabPages.Remove(tabPage);
+            }
+
+            // Clear the dictionary of panel associations
+
+            // Load tab pages and panels from the database
+            LoadCitiesAndProducts();
+        }
+
+
+
         private TabPage GetTabPageByCityId(long cityId)
         {
             foreach (TabPage tabPage in tabControl1.TabPages)
@@ -83,22 +111,6 @@ namespace Production_Controll
                 }
             }
             return null;
-        }
-
-        private bool IsProductPanelAdded(long productId)
-        {
-            foreach (TabPage tabPage in tabControl1.TabPages)
-            {
-                foreach (Panel panel in tabPage.Controls.OfType<Panel>())
-                {
-                    var association = this.GetPanelAssociation(panel);
-                    if (association != null && association.productId == productId)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
 
 
@@ -224,46 +236,6 @@ namespace Production_Controll
             return -1;
         }
 
-        public bool DeletePanel(Panel panel, long cityId)
-        {
-            TabPageCityAssociation association = this.GetTabPageCityAssociationByCity(cityId);
-
-            if (association != null)
-            {
-                TabPage tabPage = association.TabPage;
-
-                if (tabPage != null && panelCounts.TryGetValue(tabPage, out int panelCount))
-                {
-                    int removedIndex = tabPage.Controls.GetChildIndex(panel);
-                    tabPage.Controls.Remove(panel);
-
-                    for (int i = removedIndex; i < tabPage.Controls.Count; i++)
-                    {
-                        Control control = tabPage.Controls[i];
-                        if (control is Panel)
-                        {
-                            int newYPosition = control.Location.Y - (PanelHeight + PanelMargin);
-                            control.Location = new Point(control.Location.X, newYPosition);
-                        }
-                    }
-
-                    panelCount = Math.Max(0, panelCount - 1);
-                    panelCounts[tabPage] = panelCount;
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-
-            }
-            else
-            {
-                return false;
-            }
-
-        }
-
         private void ExcelBtn_Click(object sender, EventArgs e)
         {
             List<City> allCities = cityService.GetAllCities();
@@ -283,13 +255,14 @@ namespace Production_Controll
 
         private void refreshBtn_Click(object sender, EventArgs e)
         {
-            this.UpdateAllPanelLabelsAndTabPages();
+            this.RefreshTabPagesAndPanelsFromDatabase();
         }
 
         private void emptyBtn_Click(object sender, EventArgs e)
         {
             // Get the selected city ID
             long cityId = GetSelectedCityId();
+
 
             // Find the city associated with the selected tab
             City city = cityService.FindById(cityId);
@@ -309,8 +282,7 @@ namespace Production_Controll
                     {
                         // If deletion is successful, update the UI
                         MessageBox.Show("All products in the city have been deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LoadCitiesAndProducts(); // Update the UI to reflect the changes
-                        this.UpdateAllPanelLabelsAndTabPages();
+                        RefreshTabPagesAndPanelsFromDatabase(); // Update the UI to reflect the changes
                     }
                     else
                     {
@@ -324,5 +296,21 @@ namespace Production_Controll
             }
         }
 
+        private void editBtn_Click(object sender, EventArgs e)
+        {
+            City city = cityService.FindById(GetSelectedCityId());
+            using (CityAddForm cityAddForm = new CityAddForm(this, city))
+            {
+                cityAddForm.ShowDialog();
+            }
+        }
+
+        private void groupBtn_Click(object sender, EventArgs e)
+        {
+            using (ProductGroupForm productGroupForm = new ProductGroupForm())
+            {
+                productGroupForm.ShowDialog();
+            }
+        }
     }
 }

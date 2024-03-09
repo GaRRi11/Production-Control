@@ -17,11 +17,24 @@ namespace Production_Controll
         public int capacity;
         private CityService cityService;
         private MainForm parentForm;
+        private bool modify;
+        private City city;
         public CityAddForm(MainForm form)
         {
             InitializeComponent();
             parentForm = form;
             cityService = new CityService();
+            this.AcceptButton = savebtn;
+        }
+
+        public CityAddForm(MainForm form, City city) {
+            InitializeComponent();
+            parentForm = form;
+            cityService = new CityService();
+            textBox1.Text = city.name;
+            textBox2.Text = city.capacity.ToString();
+            modify = true;
+            this.city = city;
             this.AcceptButton = savebtn;
         }
 
@@ -56,20 +69,38 @@ namespace Production_Controll
                 return;
             }
             cityName = textBox1.Text;
-            if (!cityService.IsCityNameUnique(cityName))
-            {
-                MessageBox.Show("City name must be unique");
-                return;
-            }
             capacity = int.Parse(textBox2.Text);
-            City city = new City(cityName, capacity);
-            city = cityService.SaveCity(city);
-            if (city == null)
+
+            if (!modify)
             {
-                MessageBox.Show("City save failed please try again");
-                this.Close();
+                if (!cityService.IsCityNameUnique(cityName))
+                {
+                    MessageBox.Show("City name must be unique");
+                    return;
+                }
+                City city = new City(cityName, capacity);
+                city = cityService.SaveCity(city);
+                if (city == null)
+                {
+                    MessageBox.Show("City save failed please try again");
+                    this.Close();
+                }
             }
-            parentForm.CreateAndAddTabPage(city);
+            else
+            {
+                int usedSpace = city.capacity - city.availableSpace;
+                if(usedSpace > capacity)
+                {
+                    MessageBox.Show("City has used space of: " + usedSpace + ". type valid capacity");
+                    return;
+                }
+                if(!cityService.modify(city.id, cityName,capacity))
+                {
+                    MessageBox.Show("City modify failed please try again");
+                    this.Close();
+                }
+            }
+            parentForm.RefreshTabPagesAndPanelsFromDatabase();
             this.Close();
         }
     }

@@ -31,13 +31,14 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProductModifieForm));
             label1 = new Label();
             textBox1 = new TextBox();
-            excelBtn = new Button();
             additionRadio = new RadioButton();
             substractionRadio = new RadioButton();
             savebtn = new Button();
             deletebtn = new Button();
             productNameLabel = new Label();
             transferbtn = new Button();
+            editBtn = new Button();
+            historyBtn = new Button();
             SuspendLayout();
             // 
             // label1
@@ -56,16 +57,6 @@
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(125, 27);
             textBox1.TabIndex = 1;
-            // 
-            // excelBtn
-            // 
-            excelBtn.Image = (Image)resources.GetObject("excelBtn.Image");
-            excelBtn.Location = new Point(12, 214);
-            excelBtn.Name = "excelBtn";
-            excelBtn.Size = new Size(50, 31);
-            excelBtn.TabIndex = 10;
-            excelBtn.UseVisualStyleBackColor = true;
-            excelBtn.Click += excelBtn_Click;
             // 
             // additionRadio
             // 
@@ -94,9 +85,9 @@
             // savebtn
             // 
             savebtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
-            savebtn.Location = new Point(341, 200);
+            savebtn.Location = new Point(363, 200);
             savebtn.Name = "savebtn";
-            savebtn.Size = new Size(99, 45);
+            savebtn.Size = new Size(67, 45);
             savebtn.TabIndex = 13;
             savebtn.Text = "Save";
             savebtn.UseVisualStyleBackColor = true;
@@ -105,11 +96,11 @@
             // deletebtn
             // 
             deletebtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
-            deletebtn.Location = new Point(218, 200);
+            deletebtn.Image = Properties.Resources.delete;
+            deletebtn.Location = new Point(71, 200);
             deletebtn.Name = "deletebtn";
-            deletebtn.Size = new Size(99, 45);
+            deletebtn.Size = new Size(67, 45);
             deletebtn.TabIndex = 14;
-            deletebtn.Text = "Delete Product";
             deletebtn.UseVisualStyleBackColor = true;
             deletebtn.Click += deletebtn_Click;
             // 
@@ -128,25 +119,48 @@
             transferbtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
             transferbtn.Image = Properties.Resources.truck__1_;
             transferbtn.ImageAlign = ContentAlignment.BottomCenter;
-            transferbtn.Location = new Point(113, 200);
+            transferbtn.Location = new Point(217, 200);
             transferbtn.Name = "transferbtn";
-            transferbtn.Size = new Size(99, 45);
+            transferbtn.Size = new Size(67, 45);
             transferbtn.TabIndex = 16;
             transferbtn.UseVisualStyleBackColor = true;
             transferbtn.Click += transferbtn_Click;
+            // 
+            // editBtn
+            // 
+            editBtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
+            editBtn.Image = (Image)resources.GetObject("editBtn.Image");
+            editBtn.ImageAlign = ContentAlignment.BottomCenter;
+            editBtn.Location = new Point(144, 200);
+            editBtn.Name = "editBtn";
+            editBtn.Size = new Size(67, 45);
+            editBtn.TabIndex = 17;
+            editBtn.UseVisualStyleBackColor = true;
+            // 
+            // historyBtn
+            // 
+            historyBtn.Font = new Font("Segoe UI", 7.8F, FontStyle.Bold, GraphicsUnit.Point);
+            historyBtn.Image = (Image)resources.GetObject("historyBtn.Image");
+            historyBtn.Location = new Point(290, 200);
+            historyBtn.Name = "historyBtn";
+            historyBtn.Size = new Size(67, 45);
+            historyBtn.TabIndex = 18;
+            historyBtn.UseVisualStyleBackColor = true;
+            historyBtn.Click += historyBtn_Click;
             // 
             // ProductModifieForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(452, 257);
+            Controls.Add(historyBtn);
+            Controls.Add(editBtn);
             Controls.Add(transferbtn);
             Controls.Add(productNameLabel);
             Controls.Add(deletebtn);
             Controls.Add(savebtn);
             Controls.Add(substractionRadio);
             Controls.Add(additionRadio);
-            Controls.Add(excelBtn);
             Controls.Add(textBox1);
             Controls.Add(label1);
             Name = "ProductModifieForm";
@@ -159,12 +173,13 @@
 
         private Label label1;
         private TextBox textBox1;
-        private Button excelBtn;
         private RadioButton additionRadio;
         private RadioButton substractionRadio;
         private Button savebtn;
         private Button deletebtn;
         private Label productNameLabel;
         private Button transferbtn;
+        private Button editBtn;
+        private Button historyBtn;
     }
 }

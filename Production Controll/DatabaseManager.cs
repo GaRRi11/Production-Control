@@ -48,9 +48,19 @@ namespace Production_Controll
                 available_space INT NOT NULL,
                 PRIMARY KEY (id));";
 
+            string createProductGroupTableQuery = @"
+                CREATE TABLE IF NOT EXISTS production_control.product_group (
+                id BIGINT NOT NULL AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL UNIQUE,
+                liter DECIMAL NOT NULL;";
+
+
             ExecuteNonQuery(createCityTableQuery);
             ExecuteNonQuery(createProductTableQuery);
             ExecuteNonQuery(createModificationTableQuery);
+            ExecuteNonQuery(createProductGroupTableQuery);
+
+
         }
 
         public bool ExecuteNonQuery(string query)

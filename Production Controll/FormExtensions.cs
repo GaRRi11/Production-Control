@@ -15,10 +15,22 @@ namespace Production_Controll
     public static class FormExtensions
     {
 
-        private static Dictionary<Panel, PanelProductAssociation> panelAssociations = new Dictionary<Panel, PanelProductAssociation>();
-        private static Dictionary<TabPage, TabPageCityAssociation> tabPageCityAssociations = new Dictionary<TabPage, TabPageCityAssociation>();
+        public static Dictionary<Panel, PanelProductAssociation> panelAssociations = new Dictionary<Panel, PanelProductAssociation>();
+        public static Dictionary<TabPage, TabPageCityAssociation> tabPageCityAssociations = new Dictionary<TabPage, TabPageCityAssociation>();
         private static ProductService productService = new ProductService();
         private static CityService cityService = new CityService();
+
+        public static void ClearPanelAssociations(this Form form)
+        {
+            // Clear the dictionary of panel associations
+            panelAssociations.Clear();
+        }
+
+        public static void ClearTabPageAssociations(this Form form)
+        {
+            // Clear the dictionary of tab page associations
+            tabPageCityAssociations.Clear();
+        }
 
         public static void AddTabPageCityAssociation(this Form form, TabPage tabPage, long cityId)
         {
@@ -76,18 +88,6 @@ namespace Production_Controll
             tabPage.Visible = true;
             form.AddTabPageCityAssociation(tabPage, city.id);
             return tabPage;
-        }
-
-        public static bool UpdateTabPageText(this Form form, TabPage tabPage,long cityId)
-        {
-            City city = cityService.FindById(cityId);
-            if(city == null || tabPage == null)
-            {
-                return false;
-            }
-            int used = city.capacity - city.availableSpace;
-            tabPage.Text = $"{tabPage.Text.Split('(')[0]}({used}/{city.capacity})";
-            return true;
         }
 
         public static Panel CreateProductPanel(this Form form,Product product)
@@ -213,50 +213,42 @@ namespace Production_Controll
             }
         }
 
-        public static bool UpdateLabels(this Form form, Panel panelToUpdate,long productId)
+        public static void DeleteAllTabPagesAndPanels(this Form form)
         {
-            Product product = productService.GetProductById(productId);
-            
-            if (panelToUpdate != null && product != null)
+            // Remove all TabPages and associated associations
+            foreach (TabPage tabPage in form.Controls.OfType<TabPage>().ToList())
             {
-                string date = product.lastModified.ToString();
-                int quantity = product.quantity;
-
-                UpdateLabel(panelToUpdate, "quantityLabel", "რაოდენობა: " + quantity);
-                UpdateLabel(panelToUpdate, "centerLabel", "ბოლო რედ." + date);
-                return true;
+                form.DeleteTabPageAndAssociations(tabPage);
             }
-            return false;
+
+            // Clear the dictionary of panel associations
+            panelAssociations.Clear();
         }
 
-        public static void UpdateAllPanelLabelsAndTabPages(this Form form)
+        private static void DeleteTabPageAndAssociations(this Form form, TabPage tabPage)
         {
-            // Update panel labels
-            foreach (var association in panelAssociations.Values)
+            // Remove all panels in the TabPage and their associations
+            foreach (Panel panel in tabPage.Controls.OfType<Panel>().ToList())
             {
-                Panel panel = association.Panel;
-                long productId = association.productId;
-                form.UpdateLabels(panel, productId);
+                form.DeletePanelAndAssociation(panel);
             }
 
-            // Update tab page texts
-            foreach (var tabPageAssociation in tabPageCityAssociations)
-            {
-                TabPage tabPage = tabPageAssociation.Key;
-                long cityId = tabPageAssociation.Value.cityId;
-                form.UpdateTabPageText(tabPage, cityId);
-            }
+            // Remove the association for the TabPage
+            tabPageCityAssociations.Remove(tabPage);
+
+            // Remove the TabPage from the form
+            form.Controls.Remove(tabPage);
         }
 
-
-        private static void UpdateLabel(Panel panel, string labelName, string newText)
+        private static void DeletePanelAndAssociation(this Form form, Panel panel)
         {
-            Control[] labels = panel.Controls.Find(labelName, true);
-            if (labels.Length > 0 && labels[0] is Label label)
-            {
-                label.Text = newText;
-            }
+            // Remove the association for the Panel
+            panelAssociations.Remove(panel);
+
+            // Remove the Panel from its parent control
+            panel.Parent?.Controls.Remove(panel);
         }
+
 
     }
 }

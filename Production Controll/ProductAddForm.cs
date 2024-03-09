@@ -78,7 +78,7 @@ namespace Production_Controll
                     return;
                 }
                 tabPage = association.TabPage;
-                parentForm.AddProductPanel(product, tabPage);
+                parentForm.RefreshTabPagesAndPanelsFromDatabase();
             
             this.Close();
         }

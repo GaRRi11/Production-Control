@@ -120,8 +120,7 @@ namespace Production_Controll
                     MessageBox.Show("raviiabaa");
                 }
 
-                parentForm.LoadCitiesAndProducts();
-                parentForm.UpdateAllPanelLabelsAndTabPages();
+                parentForm.RefreshTabPagesAndPanelsFromDatabase();
                 //4.modifikaciis shenaxva
                 Modification modification = new Modification(product.id,Modification.Operation.TRANSFER,product.cityId,targetCity.id, quantity, DateTime.Now);
                 modificationService.SaveModification(modification);

@@ -117,32 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="editBtn.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAABGdBTUEAALGPC/xhBQAAAVBJREFUSEu1
-        lsGNwjAQRdNAzgilBEQBWwGXFIO2pe1hG1jtfa9bDIL/EhvGzjiBxHzpRY5jz2fGjkNzOvebkFrRBVp3
-        jNf5DNJOfIpv8R+g/TEZm3c8g3QMAS/iavgS3WR83rGERAYY2OCYYbBz53idc0iUyGbgGkis0VC6JMAS
-        EoucZ/EjkhJJZIsxY9skyBJhMgtsTf7E3USKBjxjbDcJNIe0DxOtCeWihHEbYxDLucrEK1c0IiNKZ9dr
-        VbnYugSzBiWGDId5eaASEgb8Ui+gB1kMO84NmCO9YkAGGBzv820wDwaLkgGlIyALDLTZBOk7Y29ypDmD
-        X8FzNgPbFl47IKVFA2+eh99Z0QCmHZUNIL15gwE8Gm8ygPHSNAdRMqB/tQEgtmA8NasbAOLkzE/WagaA
-        Sh+iKgYwXvSZFPF4oHSHfOAWHo0xo+J/p/X0zQ2WLyy7O+5H4AAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="historyBtn.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABGdBTUEAALGPC/xhBQAAAnFJREFUSEvF
-        lqFOA0EURTepIsEhSHC1Nf2BBoMgJOUP6msqcP0EHB6BRaLRGAQKhcbxDxjumZnbPibbhN0tMMnZnX0z
-        s3fem9m305xfzf+FbaVpRmIiDoPtsNhGwXYkxn4utvEO21G0RfIliy7Fu7gWCAJ1bCtBnxNxL97ERRk7
-        FU+FabFdCPosLFSTL3kwHe/Eq7gpUL8VtK0Foghwp40J8fxQoI6Ntk+xrAVNvjTNqcAzPPJsk1ciRiN5
-        JRyND8EkGOdoYPOkV7WgyZemmYkkHJ5nm05Z/ExMgg3xS5HGFBvi2NgHz6Kb8KYxCybanmub7aXeXViF
-        9XwRDK7Bflv64d03u/AksPUKNesaYdO4fln68anFPkxkr8JpvbkHW5yIGSxMqGMI1y32NgaHOmWnAruX
-        F2Fj19b242A7LuN7C/sbxZayjwoJwrY2O1Af5DGzxwYp36qwkWwj4bTZ03eu0lt4IUifrBl3QyQOBBNz
-        G3fX2QODPLZwDamQtUW4rX2Y8FBUugsLPHLS7wsRSZ+h8NfAfZtqK2GSwmOpxx3cB36L8R1EgCRzUAvT
-        kQ5sIH6HrBkD6Uw7O7kLjInj8J5fbQp/LczuJNRAYsD7a/rsAxUiiudjGxDGO/657GgamSXe8vPfeXb6
-        KSpsOK/9wkaECTMNeIn3hJyJEJ597XZyAE6tbbAwWYi1RZg14W+DcMrBQ1HZnExs2IYgn6kQ5RPAa/Lv
-        5sg7BBUcROfMBuJPVvJhjmfWmAPbziNqF1TYrBwGkyOxweuLGI2EnpBTj2mxL7ybMOdDhYWLOOFlyzvx
-        O/nvA5Zve0qNwn9Jq/H3mTdfWglpgRiQIXgAAAAASUVORK5CYII=
-</value>
-  </data>
 </root>
