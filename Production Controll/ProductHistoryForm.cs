@@ -1,67 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Production_Controll
 {
     public partial class ProductHistoryForm : Form
     {
+        private readonly ModificationService modificationService;
+        private readonly CityService cityService;
+        private readonly Product product;
 
-        private ModificationService modificationService;
-        private Product product;
         public ProductHistoryForm(Product product)
         {
             InitializeComponent();
             modificationService = new ModificationService();
+            cityService = new CityService();
             this.product = product;
         }
 
-
         private void ProductHistoryForm_Load(object sender, EventArgs e)
         {
-            // Call the method to load product modifications when the form is loaded
             LoadProductModifications();
         }
 
         private void LoadProductModifications()
         {
-            // Call the method to retrieve all product modifications
             var modifications = modificationService.GetAllModificationsByProductId(product.id);
 
-            // Check if modifications were retrieved successfully
             if (modifications != null)
             {
-                // Create columns for the DataGridView
-                dataGridViewProductModifications.Columns.Add("OperationType", "Operation Type");
-                dataGridViewProductModifications.Columns.Add("QuantityChanged", "Quantity Changed");
-                dataGridViewProductModifications.Columns.Add("Date", "Date");
+                SetupDataGridViewColumns();
 
-                // Add rows to the DataGridView
                 foreach (var modification in modifications)
                 {
-                    // Create a row array with the values of the modification
-                    var row = new List<object>
-                    {
-                        modification.operation.ToString(),
-                        modification.quantity,
-                        modification.date
-                    };
-
-                    // If operation type is transfer, add source and target city columns
-                    if (modification.operation == Modification.Operation.TRANSFER)
-                    {
-                        row.Add(modification.SourceCityId);
-                        row.Add(modification.TargetCityId);
-                    }
-
-                    // Add the row to the DataGridView
-                    dataGridViewProductModifications.Rows.Add(row.ToArray());
+                    PopulateDataGridViewRow(modification);
                 }
             }
             else
@@ -70,17 +42,64 @@ namespace Production_Controll
             }
         }
 
+        private void SetupDataGridViewColumns()
+        {
+            dataGridViewProductModifications.Columns.Clear();
+
+            foreach (var property in typeof(Modification).GetProperties())
+            {
+                if (property.Name != "productId" && property.Name != "SourceCityId" && property.Name != "TargetCityId")
+                {
+                    dataGridViewProductModifications.Columns.Add(property.Name, property.Name);
+                }
+                else if (property.Name == "SourceCityId")
+                {
+                    dataGridViewProductModifications.Columns.Add("SourceCityName", "Source City");
+                }
+                else if (property.Name == "TargetCityId")
+                {
+                    dataGridViewProductModifications.Columns.Add("TargetCityName", "Target City");
+                }
+            }
+        }
+
+        private void PopulateDataGridViewRow(Modification modification)
+        {
+            var values = new List<object>();
+
+            foreach (var property in typeof(Modification).GetProperties())
+            {
+                if (property.Name != "productId")
+                {
+                    if (property.Name == "SourceCityId")
+                    {
+                        values.Add(cityService.GetCityNameById(modification.SourceCityId));
+                    }
+                    else if (property.Name == "TargetCityId")
+                    {
+                        values.Add(cityService.GetCityNameById(modification.TargetCityId));
+                    }
+                    else
+                    {
+                        values.Add(property.GetValue(modification));
+                    }
+                }
+            }
+
+            dataGridViewProductModifications.Rows.Add(values.ToArray());
+        }
+
         private void excelBtn_Click(object sender, EventArgs e)
         {
             List<Modification> modifications = modificationService.GetAllModificationsByProductId(product.id);
-            if (modifications.Count > 0)
+            if (modifications != null && modifications.Count > 0)
             {
                 this.GenerateExcelForOne(product, modifications);
-                return;
             }
-            MessageBox.Show("excel file generation failed please try again");
-            return;
+            else
+            {
+                MessageBox.Show("Excel file generation failed. Please try again.");
+            }
         }
-
     }
 }

@@ -1,41 +1,58 @@
-﻿using OfficeOpenXml;
-using System;
+﻿using System;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Production_Controll
 {
     public partial class ProductModifieForm : Form
     {
-        private City city;
-        private Product product;
-        private ProductService productService;
-        private ModificationService modificationService;
-        private CityService cityService;
-
-        private MainForm parentForm;
-        private Panel selectedPanel;
+        private readonly CityService cityService;
+        private readonly ProductService productService;
+        private readonly ProductGroupService productGroupService;
+        private readonly ModificationService modificationService;
+        private readonly MainForm parentForm;
+        private readonly Panel selectedPanel;
+        private readonly Product product;
 
         public ProductModifieForm()
         {
             InitializeComponent();
             this.AcceptButton = savebtn;
-            textBox1.KeyPress += textBox1_KeyPress;
+            quantityTextBox.KeyPress += quantityTextBox_KeyPress;
         }
 
-        public ProductModifieForm(MainForm parent, long productId, Panel selectedPanel)
-            : this()
+        public ProductModifieForm(MainForm parent, long productId, Panel selectedPanel) : this()
         {
             this.parentForm = parent;
             this.selectedPanel = selectedPanel;
             this.productService = new ProductService();
             this.cityService = new CityService();
+            this.productGroupService = new ProductGroupService();
             this.modificationService = new ModificationService();
             this.product = productService.GetProductById(productId);
-            this.city = cityService.FindById(product.cityId);
-            this.productNameLabel.Text = product.name;
+            UpdateLabels();
         }
 
-        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        private void UpdateLabels()
+        {
+            if (product == null)
+            {
+                MessageBox.Show("Failed to retrieve product information from the database.");
+                return;
+            }
+
+            productNameLabel.Text = "Name: " + product.name;
+            expirationDateLabel.Text = "Expiration Date: " + product.expirationDate.ToShortDateString();
+            priceLabel.Text = "Price: " + product.price;
+            City city = cityService.FindById(product.cityId);
+            cityLabel.Text = "City: " + (city != null ? city.name : "Unknown");
+            quantityLabel.Text = "Quantity: " + product.quantity.ToString();
+
+            ProductGroup productGroup = productGroupService.FindById(product.productGroupId);
+            groupLabel.Text = "Group: " + (productGroup != null ? productGroup.Name + " " + productGroup.PackagingType : "Unknown");
+        }
+
+        private void quantityTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
             {
@@ -45,83 +62,61 @@ namespace Production_Controll
 
         private void savebtn_Click(object sender, EventArgs e)
         {
-            if (!int.TryParse(textBox1.Text, out int number) || string.IsNullOrWhiteSpace(textBox1.Text) || number == 0)
+            if (!int.TryParse(quantityTextBox.Text, out int quantity) || string.IsNullOrWhiteSpace(quantityTextBox.Text) || quantity == 0)
             {
-                MessageBox.Show("Type valid number");
-                textBox1.Clear();
+                MessageBox.Show("Please enter a valid quantity.");
+                quantityTextBox.Clear();
                 return;
             }
 
             if (!additionRadio.Checked && !substractionRadio.Checked)
             {
-                MessageBox.Show("Choose operation");
+                MessageBox.Show("Please choose an operation.");
                 return;
             }
-
-            int quantity = int.Parse(textBox1.Text);
 
             Modification.Operation operation = additionRadio.Checked
                 ? Modification.Operation.Addition
                 : Modification.Operation.Substraction;
 
-            Modification modification = new Modification(product.id, operation, quantity, DateTime.Now);
-
-            if (operation == Modification.Operation.Addition)
+            if (operation == Modification.Operation.Addition && quantity > cityService.FindById(product.cityId).availableSpace)
             {
-
-                if (quantity > city.availableSpace)
-                {
-                    MessageBox.Show("no enought space in that city");
-                    return;
-                }
-
-            }
-
-            if (operation == Modification.Operation.Substraction)
-            {
-                if (!productService.CheckQuantityForSubtraction(product.id, quantity))
-                {
-                    MessageBox.Show("type valid number");
-                    return;
-                }
-            }
-
-            modificationService.SaveModification(modification);
-
-            if (!productService.UpdateQuantity(product.id, modification.operation, quantity))
-            {
-                MessageBox.Show("Product quantity modifie failed please try again");
+                MessageBox.Show("There is not enough space in the city.");
                 return;
             }
+
+            if (operation == Modification.Operation.Substraction && !productService.CheckQuantityForSubtraction(product.id, quantity))
+            {
+                MessageBox.Show("Please enter a valid quantity.");
+                return;
+            }
+
+            Modification modification = new Modification(product.id, operation, quantity, DateTime.Now);
+            modificationService.SaveModification(modification);
+
+            if (!productService.UpdateQuantity(product.id, operation, quantity))
+            {
+                MessageBox.Show("Failed to modify product quantity. Please try again.");
+                return;
+            }
+
             parentForm.RefreshTabPagesAndPanelsFromDatabase();
             this.Close();
         }
 
         private void deletebtn_Click(object sender, EventArgs e)
-
         {
             Modification modification = new Modification(product.id, Modification.Operation.DELETE, product.quantity, DateTime.Now);
             modificationService.SaveModification(modification);
 
             if (!productService.DeleteProduct(product.id))
             {
-                MessageBox.Show("product delete failed please try again");
+                MessageBox.Show("Failed to delete product. Please try again.");
                 return;
             }
+
             parentForm.RefreshTabPagesAndPanelsFromDatabase();
             this.Close();
-        }
-
-        public TabPage GetTabPageByCity(City city)
-        {
-            var association = this.GetTabPageCityAssociationByCity(city.id);
-            TabPage tabPage = new TabPage();
-            if (association != null)
-            {
-                tabPage = association.TabPage;
-                return tabPage;
-            }
-            return null;
         }
 
         private void transferbtn_Click(object sender, EventArgs e)
@@ -134,10 +129,19 @@ namespace Production_Controll
 
         private void historyBtn_Click(object sender, EventArgs e)
         {
-            using(ProductHistoryForm productHistoryForm = new ProductHistoryForm(product))
+            using (ProductHistoryForm productHistoryForm = new ProductHistoryForm(product))
             {
                 productHistoryForm.ShowDialog();
             }
+        }
+
+        private void editBtn_Click(object sender, EventArgs e)
+        {
+            using (ProductAddForm productAddForm = new ProductAddForm(parentForm, product))
+            {
+                productAddForm.ShowDialog();
+            }
+            UpdateLabels();
         }
     }
 }

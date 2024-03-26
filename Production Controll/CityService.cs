@@ -16,40 +16,7 @@ namespace Production_Controll
             dbManager = new DatabaseManager();
         }
 
-        public bool transferProduct(Modification modification)
-        {
-            long sourceCityId = modification.SourceCityId;
-            long targetCityId = modification.TargetCityId;
-            City sourceCity = FindById(modification.SourceCityId);
-            City targetCity = FindById(modification.TargetCityId);
-            int sourceCityUpdatedSpace = sourceCity.availableSpace + modification.quantity;
-            int targetCityUpdatedSpace = targetCity.availableSpace - modification.quantity;
-
-            string sourceCityUpdateQuery = $"UPDATE city SET available_space = {sourceCityUpdatedSpace} WHERE id = {sourceCityId};";
-            string targetCityUpdateQuery = $"UPDATE city SET available_space = {targetCityUpdatedSpace} WHERE id = {targetCityId};";
-
-
-            // using (var transaction = dbManager.BeginTransaction())
-
-            try
-            {
-                    if (dbManager.ExecuteNonQuery(sourceCityUpdateQuery) && dbManager.ExecuteNonQuery(targetCityUpdateQuery))
-                    {
-                        // transaction.Commit();
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error updating available space: {ex.Message}");
-                }
-
-                // Rollback if the update fails
-                // transaction.Rollback();
-                return false;
-
-        }
-        public bool UpdateAvailableSpace(long cityId,Modification.Operation operation,int quantity)
+        public bool UpdateAvailableSpace(long cityId, Modification.Operation operation, int quantity)
         {
             City city = FindById(cityId);
 
@@ -87,27 +54,15 @@ namespace Production_Controll
 
             string updateQuery = $"UPDATE city SET available_space = {updatedSpace} WHERE id = {cityId};";
 
-           // using (var transaction = dbManager.BeginTransaction())
+            if (dbManager.ExecuteNonQuery(updateQuery))
             {
-                try
-                {
-                    if (dbManager.ExecuteNonQuery(updateQuery))
-                    {
-                       // transaction.Commit();
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error updating available space: {ex.Message}");
-                }
-
-                // Rollback if the update fails
-               // transaction.Rollback();
-                return false;
+                // transaction.Commit();
+                return true;
             }
-        }
 
+            return false;
+
+        }
 
         public City FindById(long cityId)
         {
@@ -119,26 +74,13 @@ namespace Production_Controll
                 return null; // Return null if there's an issue with database connectivity or finding the table
             }
 
-            if (rowsAffected)
+            if (rowsAffected && resultList.Count > 0)
             {
-                if (resultList.Count > 0 &&
-                                resultList[0].TryGetValue("id", out var idObj) &&
-                                resultList[0].TryGetValue("name", out var nameObj) &&
-                                resultList[0].TryGetValue("capacity", out var capacityObj) &&
-                                resultList[0].TryGetValue("available_space", out var available_spaceObj))
-                {
-                    long id = Convert.ToInt64(idObj);
-                    string name = nameObj.ToString();
-                    int capacity = Convert.ToInt32(capacityObj);
-                    int available_space = Convert.ToInt32(available_spaceObj);
-
-
-                    return new City(id, name, capacity, available_space);
-                }
+                return ExtractCityFromResult(resultList[0]);
             }
-            return null; 
-        }
 
+            return null;
+        }
 
         public long GetLastInsertedId()
         {
@@ -192,26 +134,15 @@ namespace Production_Controll
             string query = $"INSERT INTO city (name, capacity, available_space) " +
                            $"VALUES ('{city.name}', '{city.capacity}', '{city.capacity}');";
 
-            //using (var transaction = dbManager.BeginTransaction())
-            {
-                try
-                {
                     if (dbManager.ExecuteNonQuery(query))
                     {
                         city.id = GetLastInsertedId();
                         //transaction.Commit();
                         return city;
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error saving city: {ex.Message}");
-                }
-
-                // Rollback if the save operation fails
-                //transaction.Rollback();
+                
                 return null;
-            }
+            
         }
 
         public bool CityExists(long targetCityId)
@@ -257,29 +188,18 @@ namespace Production_Controll
             // Execute the SQL query to update the city information in the database
             string updateQuery = $"UPDATE city SET name = '{newName}', capacity = {newCapacity}, available_space = {availableSpace} WHERE id = {cityId};";
 
-            try
-            {
-                // Execute the update query
                 if (dbManager.ExecuteNonQuery(updateQuery))
                 {
                     return true; // Return true if the update is successful
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating city information: {ex.Message}");
-            }
-
+            
             return false; // Return false if the update fails
         }
-
-
 
 
         public List<City> GetAllCities()
         {
             string query = "SELECT * FROM city;";
-
             var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
 
             if (resultList == null)
@@ -287,33 +207,63 @@ namespace Production_Controll
                 return null; // Return null if there's an issue with database connectivity or finding the table
             }
 
-            if (!rowsAffected)
+            if (rowsAffected)
             {
-                return new List<City>(); // Return an empty list if the table is empty
-            }
+                List<City> cities = new List<City>();
 
-            List<City> cities = new List<City>();
-
-            foreach (var row in resultList)
-            {
-                if (row.TryGetValue("id", out var idObj) &&
-                    row.TryGetValue("name", out var nameObj) &&
-                    row.TryGetValue("capacity", out var capacityObj) &&
-                    row.TryGetValue("available_space",out var available_spaceObj))
+                foreach (var result in resultList)
                 {
-                    long id = Convert.ToInt64(idObj);
-                    string name = nameObj.ToString();
-                    int capacity = Convert.ToInt32(capacityObj);
-                    int available_space = Convert.ToInt32(available_spaceObj);
-
-                    City city = new City(id, name, capacity,available_space);
-                    cities.Add(city);
+                    City city = ExtractCityFromResult(result);
+                    if (city != null)
+                    {
+                        cities.Add(city);
+                    }
                 }
+
+                return cities;
             }
 
-            return cities;
+            return new List<City>(); // Return an empty list if the table is empty
         }
 
+        public string GetCityNameById(long cityId)
+        {
+            string query = $"SELECT name FROM city WHERE id = {cityId};";
+            var (resultList, rowsAffected) = dbManager.ExecuteQuery(query);
+
+            if (resultList == null || resultList.Count == 0)
+            {
+                Console.WriteLine($"No city found with ID: {cityId}");
+                return null;
+            }
+
+            // Retrieve the city name from the result
+            if (resultList[0].TryGetValue("name", out var cityNameObj))
+            {
+                return Convert.ToString(cityNameObj);
+            }
+
+            Console.WriteLine($"Error retrieving city name for ID: {cityId}");
+            return null;
+        }
+
+        private City ExtractCityFromResult(Dictionary<string, object> result)
+        {
+            if (result.TryGetValue("id", out var idObj) &&
+                result.TryGetValue("name", out var nameObj) &&
+                result.TryGetValue("capacity", out var capacityObj) &&
+                result.TryGetValue("available_space", out var availableSpaceObj))
+            {
+                long id = Convert.ToInt64(idObj);
+                string name = Convert.ToString(nameObj);
+                int capacity = Convert.ToInt32(capacityObj);
+                int availableSpace = Convert.ToInt32(availableSpaceObj);
+
+                return new City(id, name, capacity, availableSpace);
+            }
+
+            return null;
+        }
 
     }
 }

@@ -80,26 +80,39 @@ namespace Production_Controll
 
             foreach (var row in resultList)
             {
-                if (row.TryGetValue("id", out var idObj) &&
-                    row.TryGetValue("operation_type", out var operationTypeObj) &&
-                    row.TryGetValue("source_city_id", out var sourceCityIdObj) &&
-                    row.TryGetValue("target_city_id", out var targetCityIdObj) &&
-                    row.TryGetValue("quantity_changed", out var quantityObj) &&
-                    row.TryGetValue("date", out var dateObj))
+                Modification modification = ExtractModificationFromResult(row);
+                if (modification != null)
                 {
-                    long id = Convert.ToInt64(idObj);
-                    Modification.Operation operation = (Modification.Operation)Enum.Parse(typeof(Modification.Operation), operationTypeObj.ToString());
-                    long sourceCityId = Convert.ToInt64(sourceCityIdObj);
-                    long targetCityId = Convert.ToInt64(targetCityIdObj);
-                    int quantity = Convert.ToInt32(quantityObj);
-                    DateTime date = Convert.ToDateTime(dateObj);
-
-                    Modification modification = new Modification(id,productId, operation,sourceCityId,targetCityId, quantity, date);
                     modifications.Add(modification);
                 }
             }
 
             return modifications;
+        }
+
+        private Modification ExtractModificationFromResult(Dictionary<string, object> result)
+        {
+            if (result.TryGetValue("id", out var idObj) &&
+                result.TryGetValue("product_id", out var productIdObj) &&
+                result.TryGetValue("operation_type", out var operationTypeObj) &&
+                result.TryGetValue("source_city_id", out var sourceCityIdObj) &&
+                result.TryGetValue("target_city_id", out var targetCityIdObj) &&
+                result.TryGetValue("quantity_changed", out var quantityObj) &&
+                result.TryGetValue("date", out var dateObj))
+            {
+                long id = Convert.ToInt64(idObj);
+                long productId = Convert.ToInt64(productIdObj);
+                Modification.Operation operation = (Modification.Operation)Enum.Parse(typeof(Modification.Operation), operationTypeObj.ToString());
+                long sourceCityId = Convert.ToInt64(sourceCityIdObj);
+                long targetCityId = Convert.ToInt64(targetCityIdObj);
+                int quantity = Convert.ToInt32(quantityObj);
+                DateTime date = Convert.ToDateTime(dateObj);
+
+                return new Modification(id, productId, operation, sourceCityId, targetCityId, quantity, date);
+            }
+
+            Console.WriteLine("Error parsing modification data from result.");
+            return null;
         }
 
     }

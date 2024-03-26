@@ -16,21 +16,191 @@ namespace Production_Controll
 
         private readonly ProductService productService;
         private readonly DatabaseManager databaseManager;
-        private readonly CityService cityService = new CityService();
-        private readonly Dictionary<TabPage, int> panelCounts = new Dictionary<TabPage, int>();
-
-
+        private readonly CityService cityService;
+        private readonly ProductGroupService productGroupService;
 
         public MainForm()
         {
             InitializeComponent();
-            productService = new ProductService();
             databaseManager = new DatabaseManager();
+            productService = new ProductService();
+            cityService = new CityService();
+            productGroupService = new ProductGroupService();
             databaseManager.InitializeDB();
+            this.LoadProductGroups(groupComboBox);
+            this.LoadExpirationDates(dateComboBox);
             RefreshTabPagesAndPanelsFromDatabase();
         }
 
+        private void CityAddbtn_Click(object sender, EventArgs e)
+        {
+            using (CityAddForm cityAddForm = new CityAddForm(this))
+            {
+                cityAddForm.ShowDialog();
+            }
+        }
+
+        private void ProductionAddBtn_Click(object sender, EventArgs e)
+        {
+            long cityId = GetSelectedCityId();
+            City city = cityService.FindById(cityId);
+
+            if (city == null)
+            {
+                MessageBox.Show("Product add form open failed,cannot find city, please try again");
+                return;
+            }
+
+            if (city.availableSpace == 0)
+            {
+                MessageBox.Show("City is full");
+                return;
+            }
+
+            using (ProductAddForm form2 = new ProductAddForm(this, cityId))
+            {
+                form2.ShowDialog();
+            }
+        }
+
+        private void ExcelBtn_Click(object sender, EventArgs e)
+        {
+            List<City> allCities = cityService.GetAllCities();
+            List<Product> allProducts = productService.GetAllProducts();
+
+            if (allCities.Count > 0 && allProducts.Count > 0)
+            {
+                this.GenerateExcelForAll(allCities, allProducts);
+                return;
+            }
+            MessageBox.Show("No cities and products found");
+            return;
+        }
+
+        private void refreshBtn_Click(object sender, EventArgs e)
+        {
+            this.RefreshTabPagesAndPanelsFromDatabase();
+        }
+
+        private void emptyBtn_Click(object sender, EventArgs e)
+        {
+            long cityId = GetSelectedCityId();
+            City city = cityService.FindById(cityId);
+
+            if (city != null)
+            {
+                DialogResult result = MessageBox.Show($"Do you want to empty the city '{city.name}'?", "Confirm Emptying City", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    bool deletionSuccess = productService.DeleteAllProductsInCity(cityId);
+
+                    if (deletionSuccess)
+                    {
+                        MessageBox.Show("All products in the city have been deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        RefreshTabPagesAndPanelsFromDatabase();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Failed to delete products from the city. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Failed to retrieve city information. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void editBtn_Click(object sender, EventArgs e)
+        {
+            City city = cityService.FindById(GetSelectedCityId());
+
+            if (city == null)
+            {
+                MessageBox.Show("no city added");
+                return;
+            }
+
+            using (CityAddForm cityAddForm = new CityAddForm(this, city))
+            {
+                cityAddForm.ShowDialog();
+            }
+        }
+
+        private void groupBtn_Click(object sender, EventArgs e)
+        {
+            using (ProductGroupForm productGroupForm = new ProductGroupForm(this))
+            {
+                productGroupForm.ShowDialog();
+            }
+        }
+
+        private void Panel_Click(object sender, EventArgs e)
+        {
+            if (sender is Panel panel)
+            {
+                var association = this.GetPanelAssociation(panel);
+
+                if (association != null)
+                {
+                    long productId = association.productId;
+
+                    using (ProductModifieForm form3 = new ProductModifieForm(this, productId, panel))
+                    {
+                        form3.ShowDialog();
+                    }
+                }
+            }
+        }
+
+        private void dateComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (dateComboBox.SelectedItem != null)
+            {
+                string selectedOption = dateComboBox.SelectedItem.ToString();
+
+                if (selectedOption == "None")
+                {
+                    RefreshTabPagesAndPanelsFromDatabase();
+                }
+                else
+                {
+                    DateTime expirationDate = DateTime.Now.AddMonths(int.Parse(selectedOption.Split(' ')[0]));
+
+                    FilterProductsByExpirationDate(expirationDate);
+                }
+            }
+        }
+
+        private void FilterProductsByExpirationDate(DateTime expirationDate)
+        {
+            List<Product> allProducts = productService.GetAllProducts();
+
+
+            if (allProducts != null)
+            {
+                ClearPanels();
+                List<Product> filteredProducts = allProducts.Where(p => p.expirationDate <= expirationDate).ToList();
+                foreach (var product in filteredProducts)
+                {
+                    AddProductPanel(product);
+                }
+            }
+        }
+
+        public void LoadProductGroups()
+        {
+            this.LoadProductGroups(groupComboBox);
+        }
+
         public void LoadCitiesAndProducts()
+        {
+            LoadCityTabPages();
+            LoadProductPanels();
+        }
+
+        private void LoadCityTabPages()
         {
             List<City> cities = cityService.GetAllCities();
             if (cities != null)
@@ -42,63 +212,51 @@ namespace Production_Controll
                     {
                         tabPage = CreateAndAddTabPage(city);
                     }
-
-                    if (!panelCounts.ContainsKey(tabPage))
-                    {
-                        panelCounts[tabPage] = 0;
-                    }
-
-                    List<Product> products = productService.GetAllProductsByCityId(city.id);
-                    if (products != null)
-                    {
-                        foreach (var product in products)
-                        {
-
-                            AddProductPanel(product, tabPage);
-
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Cities and product load failed. Please restart the app.");
-                        return;
-                    }
                 }
             }
             else
             {
-                MessageBox.Show("Cities and product load failed. Please restart the app.");
+                MessageBox.Show("Failed to load cities. Please restart the app.");
+            }
+        }
+
+        private void LoadProductPanels()
+        {
+            List<Product> products = productService.GetAllProducts();
+            if (products != null)
+            {
+                foreach (var product in products)
+                {
+                    AddProductPanel(product);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Failed to load products for the city. Please restart the app.");
                 return;
             }
         }
 
+
         public void RefreshTabPagesAndPanelsFromDatabase()
         {
-            // Remove all TabPages and associated associations
+            ClearPanels();
+
             foreach (TabPage tabPage in tabControl1.TabPages.OfType<TabPage>().ToList())
             {
-                // Remove all panels in the TabPage and their associations
                 foreach (Panel panel in tabPage.Controls.OfType<Panel>().ToList())
                 {
-                    tabPage.Controls.Remove(panel); // Remove the Panel from the TabPage
+                    tabPage.Controls.Remove(panel); 
                     this.ClearPanelAssociations();
 
                 }
 
-                // Remove the association for the TabPage
                 this.ClearTabPageAssociations();
-
-                // Remove the TabPage from the tabControl
                 tabControl1.TabPages.Remove(tabPage);
             }
 
-            // Clear the dictionary of panel associations
-
-            // Load tab pages and panels from the database
             LoadCitiesAndProducts();
         }
-
-
 
         private TabPage GetTabPageByCityId(long cityId)
         {
@@ -113,12 +271,45 @@ namespace Production_Controll
             return null;
         }
 
-
-        private void CityAddbtn_Click(object sender, EventArgs e)
+        private void groupComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            using (CityAddForm cityAddForm = new CityAddForm(this))
+            ClearPanels();
+
+            if (groupComboBox.SelectedItem != null)
             {
-                cityAddForm.ShowDialog();
+                if (groupComboBox.SelectedItem.ToString() == "None")
+                {
+                    RefreshTabPagesAndPanelsFromDatabase();
+                }
+                else
+                {
+                    string selectedItem = groupComboBox.SelectedItem.ToString();
+                    long groupId = Convert.ToInt64(selectedItem.Split('-')[0].Trim());
+
+                    LoadProductsByGroupId(groupId);
+                }
+            }
+        }
+
+
+        private void LoadProductsByGroupId(long groupId)
+        {
+            List<Product> products = productService.getProductsByGroupId(groupId);
+
+            if (products != null)
+            {
+                foreach (var product in products)
+                {
+                    AddProductPanel(product);
+                }
+            }
+        }
+
+        private void ClearPanels()
+        {
+            foreach (TabPage tabPage in tabControl1.TabPages)
+            {
+                tabPage.Controls.Clear();
             }
         }
 
@@ -147,77 +338,39 @@ namespace Production_Controll
         {
             PanelMouseEnterAndLeave(sender, false);
         }
-
-
-
-        public void AddProductPanel(Product product, TabPage targetTabPage)
+        public void AddProductPanel(Product product)
         {
-
-            if (product == null || targetTabPage == null)
+            if (product == null)
             {
-                MessageBox.Show("Product panel addition failed please restart the app");
+                MessageBox.Show("Product panel addition failed. Please restart the app.");
                 return;
             }
-            Panel productPanel;
-            productPanel = this.CreateProductPanel(product);
+
+            long cityId = product.cityId;
+            TabPage tabPage = GetTabPageByCityId(cityId);
+
+            if (tabPage == null)
+            {
+                City city = cityService.FindById(cityId);
+                tabPage = CreateAndAddTabPage(city);
+            }
+
+            Panel productPanel = this.CreateProductPanel(product);
             productPanel.Click += Panel_Click;
             productPanel.MouseEnter += Panel_MouseEnter;
             productPanel.MouseLeave += Panel_MouseLeave;
-            if (!panelCounts.ContainsKey(targetTabPage))
-            {
-                panelCounts[targetTabPage] = 0;
-            }
-            int yPosition = panelCounts[targetTabPage] * (PanelHeight + PanelMargin);
-            productPanel.Location = new Point(0, yPosition);
-            targetTabPage.Controls.Add(productPanel);
-            panelCounts[targetTabPage]++;
-        }
+            int yPosition = 0;
 
-        private void Panel_Click(object sender, EventArgs e)
-        {
-            if (sender is Panel panel)
+            foreach (Control control in tabPage.Controls)
             {
-                var association = this.GetPanelAssociation(panel);
-
-                if (association != null)
+                if (control is Panel panel)
                 {
-                    long productId = association.productId;
-
-                    using (ProductModifieForm form3 = new ProductModifieForm(this, productId, panel))
-                    {
-                        form3.ShowDialog();
-                    }
+                    yPosition += panel.Height + PanelMargin;
                 }
             }
-        }
 
-
-        private void ProductionAddBtn_Click(object sender, EventArgs e)
-        {
-            long cityId = GetSelectedCityId();
-            City city = cityService.FindById(cityId);
-
-            if (cityId == -1)
-            {
-                MessageBox.Show("Product add form open failed please try again");
-                return;
-            }
-
-            if (city == null)
-            {
-                MessageBox.Show("Product add form open failed,cannot find city, please try again");
-                return;
-            }
-            if (city.availableSpace == 0)
-            {
-                MessageBox.Show("City is full");
-                return;
-            }
-
-            using (ProductAddForm form2 = new ProductAddForm(this, cityId))
-            {
-                form2.ShowDialog();
-            }
+            productPanel.Location = new Point(0, yPosition);
+            tabPage.Controls.Add(productPanel);
         }
 
         private long GetSelectedCityId()
@@ -236,81 +389,5 @@ namespace Production_Controll
             return -1;
         }
 
-        private void ExcelBtn_Click(object sender, EventArgs e)
-        {
-            List<City> allCities = cityService.GetAllCities();
-            List<Product> allProducts = productService.GetAllProducts();
-            if (allCities.Count > 0 && allProducts.Count > 0)
-            {
-                this.GenerateExcelForAll(allCities, allProducts);
-                return;
-            }
-            MessageBox.Show("excel file generation failed please try again");
-            return;
-        }
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-        }
-
-        private void refreshBtn_Click(object sender, EventArgs e)
-        {
-            this.RefreshTabPagesAndPanelsFromDatabase();
-        }
-
-        private void emptyBtn_Click(object sender, EventArgs e)
-        {
-            // Get the selected city ID
-            long cityId = GetSelectedCityId();
-
-
-            // Find the city associated with the selected tab
-            City city = cityService.FindById(cityId);
-
-            // If the city is found, prompt the user to confirm deletion
-            if (city != null)
-            {
-                DialogResult result = MessageBox.Show($"Do you want to empty the city '{city.name}'?", "Confirm Emptying City", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                // If the user confirms, delete all products from the city
-                if (result == DialogResult.Yes)
-                {
-                    // Delete all products from the city
-                    bool deletionSuccess = productService.DeleteAllProductsInCity(cityId);
-
-                    if (deletionSuccess)
-                    {
-                        // If deletion is successful, update the UI
-                        MessageBox.Show("All products in the city have been deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        RefreshTabPagesAndPanelsFromDatabase(); // Update the UI to reflect the changes
-                    }
-                    else
-                    {
-                        MessageBox.Show("Failed to delete products from the city. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.Show("Failed to retrieve city information. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void editBtn_Click(object sender, EventArgs e)
-        {
-            City city = cityService.FindById(GetSelectedCityId());
-            using (CityAddForm cityAddForm = new CityAddForm(this, city))
-            {
-                cityAddForm.ShowDialog();
-            }
-        }
-
-        private void groupBtn_Click(object sender, EventArgs e)
-        {
-            using (ProductGroupForm productGroupForm = new ProductGroupForm())
-            {
-                productGroupForm.ShowDialog();
-            }
-        }
     }
 }

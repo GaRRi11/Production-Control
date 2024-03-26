@@ -37,6 +37,8 @@
             emptyBtn = new Button();
             editBtn = new Button();
             groupBtn = new Button();
+            dateComboBox = new ComboBox();
+            groupComboBox = new ComboBox();
             SuspendLayout();
             // 
             // tabControl1
@@ -72,11 +74,11 @@
             // cityAddbtn
             // 
             cityAddbtn.Font = new Font("Segoe UI Black", 10.8F, FontStyle.Bold, GraphicsUnit.Point);
+            cityAddbtn.Image = (Image)resources.GetObject("cityAddbtn.Image");
             cityAddbtn.Location = new Point(114, 2);
             cityAddbtn.Name = "cityAddbtn";
             cityAddbtn.Size = new Size(50, 31);
             cityAddbtn.TabIndex = 11;
-            cityAddbtn.Text = "+";
             cityAddbtn.UseVisualStyleBackColor = true;
             cityAddbtn.Click += CityAddbtn_Click;
             // 
@@ -117,18 +119,38 @@
             // 
             groupBtn.Font = new Font("Segoe UI Black", 10.8F, FontStyle.Bold, GraphicsUnit.Point);
             groupBtn.Image = Properties.Resources.product__1_;
-            groupBtn.Location = new Point(743, 2);
+            groupBtn.Location = new Point(338, 2);
             groupBtn.Name = "groupBtn";
             groupBtn.Size = new Size(50, 31);
             groupBtn.TabIndex = 15;
             groupBtn.UseVisualStyleBackColor = true;
             groupBtn.Click += groupBtn_Click;
             // 
+            // dateComboBox
+            // 
+            dateComboBox.FormattingEnabled = true;
+            dateComboBox.Location = new Point(614, 5);
+            dateComboBox.Name = "dateComboBox";
+            dateComboBox.Size = new Size(176, 28);
+            dateComboBox.TabIndex = 16;
+            dateComboBox.SelectedIndexChanged += dateComboBox_SelectedIndexChanged;
+            // 
+            // groupComboBox
+            // 
+            groupComboBox.FormattingEnabled = true;
+            groupComboBox.Location = new Point(394, 4);
+            groupComboBox.Name = "groupComboBox";
+            groupComboBox.Size = new Size(214, 28);
+            groupComboBox.TabIndex = 17;
+            groupComboBox.SelectedIndexChanged += groupComboBox_SelectedIndexChanged;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(796, 447);
+            Controls.Add(groupComboBox);
+            Controls.Add(dateComboBox);
             Controls.Add(groupBtn);
             Controls.Add(editBtn);
             Controls.Add(emptyBtn);
@@ -139,7 +161,6 @@
             Controls.Add(tabControl1);
             Name = "MainForm";
             Text = "Form1";
-            Load += MainForm_Load;
             ResumeLayout(false);
         }
 
@@ -153,5 +174,7 @@
         private Button emptyBtn;
         private Button editBtn;
         private Button groupBtn;
+        private ComboBox dateComboBox;
+        private ComboBox groupComboBox;
     }
 }

@@ -109,6 +109,12 @@ namespace Production_Controll
                 return; // Exit the event handler
             }
 
+            if (product.quantity < quantity)
+            {
+                MessageBox.Show("Insufficient quantity for transfer.");
+                return;
+            }
+
             DialogResult result = MessageBox.Show("Are you sure to transfer " + quantity + " " + product.name + " from " + city.name + " to " + targetCity.name + "?",
                                            "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
@@ -117,7 +123,7 @@ namespace Production_Controll
             {
                 if(!productService.TransferProductToCity(product.id, quantity, targetCity.id))
                 {
-                    MessageBox.Show("raviiabaa");
+                    MessageBox.Show("Product transfer failed please try again");
                 }
 
                 parentForm.RefreshTabPagesAndPanelsFromDatabase();

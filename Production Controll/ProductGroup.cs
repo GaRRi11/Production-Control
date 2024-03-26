@@ -12,21 +12,25 @@ namespace Production_Controll
         public string Name { get; set; }
         public decimal Liter { get; set; }
 
+        public string PackagingType { get; set; }
+
         public ProductGroup()
         {
         }
 
-        public ProductGroup(string name, decimal liter)
+        public ProductGroup(string name, decimal liter, string packagingType)
         {
             Name = name;
             Liter = liter;
+            PackagingType = packagingType;
         }
 
-        public ProductGroup(long id, string name, decimal liter)
+        public ProductGroup(long id, string name, decimal liter, string packagingType)
         {
             Id = id;
             Name = name;
             Liter = liter;
+            PackagingType = packagingType;
         }
     }
 }

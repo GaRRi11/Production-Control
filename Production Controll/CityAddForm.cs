@@ -1,46 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Production_Controll
 {
     public partial class CityAddForm : Form
     {
+        private string cityName;
+        private int capacity;
+        private readonly CityService cityService;
+        private readonly MainForm parentForm;
+        private readonly bool modify;
+        private readonly City city;
 
-        public string cityName;
-        public int capacity;
-        private CityService cityService;
-        private MainForm parentForm;
-        private bool modify;
-        private City city;
         public CityAddForm(MainForm form)
         {
             InitializeComponent();
             parentForm = form;
             cityService = new CityService();
-            this.AcceptButton = savebtn;
+            AcceptButton = savebtn;
         }
 
-        public CityAddForm(MainForm form, City city) {
-            InitializeComponent();
-            parentForm = form;
-            cityService = new CityService();
-            textBox1.Text = city.name;
-            textBox2.Text = city.capacity.ToString();
+        public CityAddForm(MainForm form, City city) : this(form)
+        {
+            nameTextBox.Text = city.name;
+            capacityTextBox.Text = city.capacity.ToString();
             modify = true;
             this.city = city;
-            this.AcceptButton = savebtn;
         }
 
-        private void textBox2_KeyPress(object sender, KeyPressEventArgs e)
+        private void capacityTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
             {
                 e.Handled = true;
             }
@@ -48,60 +38,75 @@ namespace Production_Controll
 
         private void savebtn_Click(object sender, EventArgs e)
         {
-            if (textBox1.Text.Length > 30)
+            cityName = nameTextBox.Text.Trim();
+            string capacityText = capacityTextBox.Text.Trim();
+
+            if (cityName.Length == 0)
             {
-                MessageBox.Show("too long name");
+                MessageBox.Show("Please type the name of the city.");
                 return;
             }
-            if (string.IsNullOrWhiteSpace(textBox1.Text))
+
+            if (capacityText.Length == 0)
             {
-                MessageBox.Show("type the name of product");
+                MessageBox.Show("Please type the capacity of the city.");
                 return;
             }
-            if (textBox1.Text.All(c => c == '0'))
+
+            if (!int.TryParse(capacityText, out capacity))
             {
-                MessageBox.Show("Please type a valid number.", "Invalid Number", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return; // Exit the event handler
-            }
-            if (string.IsNullOrWhiteSpace(textBox2.Text))
-            {
-                MessageBox.Show("type the name of product");
+                MessageBox.Show("Please type a valid number for the capacity.", "Invalid Capacity", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            cityName = textBox1.Text;
-            capacity = int.Parse(textBox2.Text);
+
+            if (capacity <= 0)
+            {
+                MessageBox.Show("Capacity must be a positive integer.", "Invalid Capacity", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (nameTextBox.Text.Length > 30)
+            {
+                MessageBox.Show("The city name is too long (max 30 characters).");
+                return;
+            }
 
             if (!modify)
             {
                 if (!cityService.IsCityNameUnique(cityName))
                 {
-                    MessageBox.Show("City name must be unique");
+                    MessageBox.Show("City name must be unique.");
                     return;
                 }
-                City city = new City(cityName, capacity);
-                city = cityService.SaveCity(city);
-                if (city == null)
+
+                City newCity = new City(cityName, capacity);
+                newCity = cityService.SaveCity(newCity);
+
+                if (newCity == null)
                 {
-                    MessageBox.Show("City save failed please try again");
-                    this.Close();
+                    MessageBox.Show("Failed to save the city. Please try again.");
+                    return;
                 }
             }
             else
             {
                 int usedSpace = city.capacity - city.availableSpace;
-                if(usedSpace > capacity)
+
+                if (usedSpace > capacity)
                 {
-                    MessageBox.Show("City has used space of: " + usedSpace + ". type valid capacity");
+                    MessageBox.Show($"The city has used space of {usedSpace}. Please enter a valid capacity.");
                     return;
                 }
-                if(!cityService.modify(city.id, cityName,capacity))
+
+                if (!cityService.modify(city.id, cityName, capacity))
                 {
-                    MessageBox.Show("City modify failed please try again");
-                    this.Close();
+                    MessageBox.Show("Failed to modify the city. Please try again.");
+                    return;
                 }
             }
+
             parentForm.RefreshTabPagesAndPanelsFromDatabase();
-            this.Close();
+            Close();
         }
     }
 }

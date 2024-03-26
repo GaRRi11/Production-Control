@@ -18,49 +18,54 @@ namespace Production_Controll
 
         public void InitializeDB()
         {
-            string createProductTableQuery = @"
-                 CREATE TABLE IF NOT EXISTS production_control.products (
-                 id BIGINT NOT NULL AUTO_INCREMENT,
-                 name VARCHAR(255) NOT NULL ,
-                 city_id BIGINT NOT NULL,
-                 quantity INT NOT NULL,
-                 last_modified DATETIME NOT NULL,
-                 PRIMARY KEY (id),
-                 FOREIGN KEY (city_id) REFERENCES production_control.city(id) ON DELETE CASCADE);"; 
-
-            string createModificationTableQuery = @"CREATE TABLE IF NOT EXISTS production_control.Modifications (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    product_id BIGINT NOT NULL,
-    operation_type VARCHAR(255) NOT NULL,
-    source_city_id BIGINT,
-    target_city_id BIGINT,
-    quantity_changed INT NOT NULL,
-    date DATETIME NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (product_id) REFERENCES production_control.products(id) ON DELETE CASCADE
-);";
-
             string createCityTableQuery = @"
-                CREATE TABLE IF NOT EXISTS production_control.city (
-                id BIGINT NOT NULL AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL UNIQUE,
-                capacity INT NOT NULL,
-                available_space INT NOT NULL,
-                PRIMARY KEY (id));";
+        CREATE TABLE IF NOT EXISTS production_control.city (
+        id BIGINT NOT NULL AUTO_INCREMENT,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        capacity INT NOT NULL,
+        available_space INT NOT NULL,
+        PRIMARY KEY (id));";
 
             string createProductGroupTableQuery = @"
-                CREATE TABLE IF NOT EXISTS production_control.product_group (
-                id BIGINT NOT NULL AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL UNIQUE,
-                liter DECIMAL NOT NULL;";
+        CREATE TABLE IF NOT EXISTS production_control.product_group (
+            id BIGINT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            packaging_type VARCHAR(255) NOT NULL,
+            liter DECIMAL(10,2) NOT NULL,
+            PRIMARY KEY (id)
+        );";
 
+            string createProductTableQuery = @"
+         CREATE TABLE IF NOT EXISTS production_control.products (
+         id BIGINT NOT NULL AUTO_INCREMENT,
+         name VARCHAR(255) NOT NULL ,
+         product_group_id BIGINT NOT NULL,
+         price DECIMAL(10,2) NOT NULL,
+         expiration_date DATETIME NOT NULL,
+         city_id BIGINT NOT NULL,
+         quantity INT NOT NULL,
+         last_modified DATETIME NOT NULL,
+         PRIMARY KEY (id),
+         FOREIGN KEY (city_id) REFERENCES production_control.city(id) ON DELETE CASCADE,
+         FOREIGN KEY (product_group_id) REFERENCES production_control.product_group(id) ON DELETE CASCADE
+    );";
+
+            string createModificationTableQuery = @"CREATE TABLE IF NOT EXISTS production_control.Modifications (
+        id BIGINT NOT NULL AUTO_INCREMENT,
+        product_id BIGINT NOT NULL,
+        operation_type VARCHAR(255) NOT NULL,
+        source_city_id BIGINT,
+        target_city_id BIGINT,
+        quantity_changed INT NOT NULL,
+        date DATETIME NOT NULL,
+        PRIMARY KEY (id),
+        FOREIGN KEY (product_id) REFERENCES production_control.products(id) ON DELETE CASCADE
+    );";
 
             ExecuteNonQuery(createCityTableQuery);
+            ExecuteNonQuery(createProductGroupTableQuery);
             ExecuteNonQuery(createProductTableQuery);
             ExecuteNonQuery(createModificationTableQuery);
-            ExecuteNonQuery(createProductGroupTableQuery);
-
-
         }
 
         public bool ExecuteNonQuery(string query)

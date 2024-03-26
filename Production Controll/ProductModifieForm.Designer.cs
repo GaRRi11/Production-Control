@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProductModifieForm));
             label1 = new Label();
-            textBox1 = new TextBox();
+            quantityTextBox = new TextBox();
             additionRadio = new RadioButton();
             substractionRadio = new RadioButton();
             savebtn = new Button();
@@ -39,30 +39,35 @@
             transferbtn = new Button();
             editBtn = new Button();
             historyBtn = new Button();
+            expirationDateLabel = new Label();
+            priceLabel = new Label();
+            groupLabel = new Label();
+            cityLabel = new Label();
+            quantityLabel = new Label();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            label1.Location = new Point(37, 81);
+            label1.Location = new Point(223, 9);
             label1.Name = "label1";
             label1.Size = new Size(78, 20);
             label1.TabIndex = 0;
             label1.Text = "Quantity: ";
             // 
-            // textBox1
+            // quantityTextBox
             // 
-            textBox1.Location = new Point(269, 81);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(125, 27);
-            textBox1.TabIndex = 1;
+            quantityTextBox.Location = new Point(315, 6);
+            quantityTextBox.Name = "quantityTextBox";
+            quantityTextBox.Size = new Size(125, 27);
+            quantityTextBox.TabIndex = 1;
             // 
             // additionRadio
             // 
             additionRadio.AutoSize = true;
             additionRadio.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            additionRadio.Location = new Point(37, 121);
+            additionRadio.Location = new Point(223, 54);
             additionRadio.Name = "additionRadio";
             additionRadio.Size = new Size(91, 24);
             additionRadio.TabIndex = 11;
@@ -74,7 +79,7 @@
             // 
             substractionRadio.AutoSize = true;
             substractionRadio.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            substractionRadio.Location = new Point(37, 163);
+            substractionRadio.Location = new Point(223, 99);
             substractionRadio.Name = "substractionRadio";
             substractionRadio.Size = new Size(118, 24);
             substractionRadio.TabIndex = 12;
@@ -108,7 +113,7 @@
             // 
             productNameLabel.AutoSize = true;
             productNameLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            productNameLabel.Location = new Point(47, 30);
+            productNameLabel.Location = new Point(12, 9);
             productNameLabel.Name = "productNameLabel";
             productNameLabel.Size = new Size(51, 20);
             productNameLabel.TabIndex = 15;
@@ -136,6 +141,7 @@
             editBtn.Size = new Size(67, 45);
             editBtn.TabIndex = 17;
             editBtn.UseVisualStyleBackColor = true;
+            editBtn.Click += editBtn_Click;
             // 
             // historyBtn
             // 
@@ -148,11 +154,66 @@
             historyBtn.UseVisualStyleBackColor = true;
             historyBtn.Click += historyBtn_Click;
             // 
+            // expirationDateLabel
+            // 
+            expirationDateLabel.AutoSize = true;
+            expirationDateLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            expirationDateLabel.Location = new Point(12, 99);
+            expirationDateLabel.Name = "expirationDateLabel";
+            expirationDateLabel.Size = new Size(51, 20);
+            expirationDateLabel.TabIndex = 19;
+            expirationDateLabel.Text = "label2";
+            // 
+            // priceLabel
+            // 
+            priceLabel.AutoSize = true;
+            priceLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            priceLabel.Location = new Point(12, 136);
+            priceLabel.Name = "priceLabel";
+            priceLabel.Size = new Size(51, 20);
+            priceLabel.TabIndex = 20;
+            priceLabel.Text = "label2";
+            // 
+            // groupLabel
+            // 
+            groupLabel.AutoSize = true;
+            groupLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            groupLabel.Location = new Point(12, 58);
+            groupLabel.Name = "groupLabel";
+            groupLabel.Size = new Size(51, 20);
+            groupLabel.TabIndex = 21;
+            groupLabel.Text = "label2";
+            // 
+            // cityLabel
+            // 
+            cityLabel.AutoSize = true;
+            cityLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            cityLabel.Location = new Point(12, 38);
+            cityLabel.Name = "cityLabel";
+            cityLabel.Size = new Size(51, 20);
+            cityLabel.TabIndex = 22;
+            cityLabel.Text = "label2";
+            // 
+            // quantityLabel
+            // 
+            quantityLabel.AutoSize = true;
+            quantityLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            quantityLabel.Location = new Point(12, 167);
+            quantityLabel.Name = "quantityLabel";
+            quantityLabel.Size = new Size(51, 20);
+            quantityLabel.TabIndex = 23;
+            quantityLabel.Text = "label2";
+            // 
             // ProductModifieForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(452, 257);
+            Controls.Add(quantityLabel);
+            Controls.Add(cityLabel);
+            Controls.Add(groupLabel);
+            Controls.Add(priceLabel);
+            Controls.Add(expirationDateLabel);
             Controls.Add(historyBtn);
             Controls.Add(editBtn);
             Controls.Add(transferbtn);
@@ -161,7 +222,7 @@
             Controls.Add(savebtn);
             Controls.Add(substractionRadio);
             Controls.Add(additionRadio);
-            Controls.Add(textBox1);
+            Controls.Add(quantityTextBox);
             Controls.Add(label1);
             Name = "ProductModifieForm";
             Text = "Form3";
@@ -172,7 +233,7 @@
         #endregion
 
         private Label label1;
-        private TextBox textBox1;
+        private TextBox quantityTextBox;
         private RadioButton additionRadio;
         private RadioButton substractionRadio;
         private Button savebtn;
@@ -181,5 +242,10 @@
         private Button transferbtn;
         private Button editBtn;
         private Button historyBtn;
+        private Label expirationDateLabel;
+        private Label priceLabel;
+        private Label groupLabel;
+        private Label cityLabel;
+        private Label quantityLabel;
     }
 }

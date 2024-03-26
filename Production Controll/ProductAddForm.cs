@@ -1,85 +1,151 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Production_Controll.Product;
 
 namespace Production_Controll
 {
     public partial class ProductAddForm : Form
     {
-        public string productName { get; set; }
-        private MainForm parentForm;
-        private ProductService productService;
-        private CityService cityService;
-        private ModificationService modificationService;
-        private City city;
-        public ProductAddForm(MainForm parentForm,long cityId)
+        private readonly MainForm parentForm;
+        private readonly ProductService productService;
+        private readonly ProductGroupService productGroupService;
+        private readonly ModificationService modificationService;
+        private Product product;
+        private bool modify;
+        private long cityId;
+
+        public ProductAddForm(MainForm parentForm, long cityId)
         {
             InitializeComponent();
-            this.AcceptButton = button1;
+            this.cityId = cityId;
             this.parentForm = parentForm;
             this.productService = new ProductService();
-            this.cityService = new CityService();
+            this.productGroupService = new ProductGroupService();
             this.modificationService = new ModificationService();
-            this.city = cityService.FindById(cityId);
+            this.AcceptButton = saveBtn;
+        }
+
+        public ProductAddForm(MainForm parentForm, Product product) : this(parentForm, product.cityId)
+        {
+            this.product = product;
+            this.modify = true;
+        }
+
+        private void SetProductFields(Product product)
+        {
+            textBox2.Text = product.name;
+            priceTextBox.Text = product.price.ToString();
+            dateTimePicker.Value = product.expirationDate;
+
+            for (int i = 0; i < groupComboBox.Items.Count; i++)
+            {
+                string item = groupComboBox.Items[i].ToString();
+                if (item.StartsWith($"{product.productGroupId} -"))
+                {
+                    groupComboBox.SelectedIndex = i;
+                    break;
+                }
+            }
         }
 
         private void Form2_Load(object sender, EventArgs e)
         {
-            this.Size = new Size(407, 247);
+            this.Size = new Size(397, 337);
+            dateTimePicker.Value = DateTime.Now.AddDays(1);
+
+            List<ProductGroup> productGroups = productGroupService.GetAllProductGroups();
+
+            if (productGroups != null)
+            {
+                foreach (var group in productGroups)
+                {
+                    groupComboBox.Items.Add($"{group.Id} - {group.Name} - {group.PackagingType} - {group.Liter}");
+                }
+            }
+
+            if (modify && product != null)
+            {
+                SetProductFields(product);
+            }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void ModifyProduct()
         {
-            if (textBox1.Text.Length > 30)
-            {
-                MessageBox.Show("too long name");
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(textBox1.Text))
-            {
-                MessageBox.Show("type the name of product");
-                return;
-            }
-            productName = textBox1.Text;
-            if(city == null)
-            {
-                MessageBox.Show("Product save failed. cannot find city. please try again");
-                return;
-            }
+            string newName = textBox2.Text;
+            decimal newPrice = decimal.Parse(priceTextBox.Text);
+            DateTime newExpirationDate = dateTimePicker.Value;
+            long productId = product.id;
 
-            
-                if (productService.DoesProductExistInCity(productName, city.id))
-                {
-                    MessageBox.Show($"{productName} already exists in that city");
-                    return;
-                }
-                Product product = new Product(productName, city.id);
-                product = productService.SaveProduct(product);
-                Modification modification = new Modification(product.id, Modification.Operation.CREATE, 0, DateTime.Now);
-                modificationService.SaveModification(modification);
+            bool success = productService.UpdateProduct(productId, newName, newPrice, newExpirationDate);
 
-            if (product == null)
-                {
-                    MessageBox.Show("Product save failed please try again");
-                    return;
-                }
-                var association = this.GetTabPageCityAssociationByCity(city.id);
-                TabPage tabPage = new TabPage();
-                if (association == null)
-                {
-                    MessageBox.Show("Product panel add failed please restart the app");
-                    return;
-                }
-                tabPage = association.TabPage;
+            if (success)
+            {
                 parentForm.RefreshTabPagesAndPanelsFromDatabase();
-            
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("Failed to update product. Please try again.");
+            }
+        }
+
+        private void saveBtn_Click(object sender, EventArgs e)
+        {
+            if (textBox2.Text.Length > 30)
+            {
+                MessageBox.Show("Product name is too long.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(textBox2.Text))
+            {
+                MessageBox.Show("Please enter the product name.");
+                return;
+            }
+
+            if (groupComboBox.SelectedIndex == -1)
+            {
+                MessageBox.Show("Please select a product group.");
+                return;
+            }
+
+            if (!decimal.TryParse(priceTextBox.Text, out decimal price) || price <= 0)
+            {
+                MessageBox.Show("Please enter a valid price.");
+                return;
+            }
+
+            if (dateTimePicker.Value <= DateTime.Now)
+            {
+                MessageBox.Show("Please enter a valid expiration date in the future.");
+                return;
+            }
+
+            DateTime expirationDate = dateTimePicker.Value;
+            long productGroupId = Convert.ToInt64(groupComboBox.SelectedItem.ToString().Split('-')[0].Trim());
+
+            Product newProduct = new Product(textBox2.Text, productGroupId, price, expirationDate, cityId);
+
+            if (!modify)
+            {
+                newProduct = productService.SaveProduct(newProduct);
+
+                if (newProduct == null)
+                {
+                    MessageBox.Show("Failed to save product. Please try again.");
+                    return;
+                }
+
+                Modification modification = new Modification(newProduct.id, Modification.Operation.CREATE, 0, DateTime.Now);
+                modificationService.SaveModification(modification);
+            }
+            else
+            {
+                ModifyProduct();
+            }
+
+            parentForm.RefreshTabPagesAndPanelsFromDatabase();
             this.Close();
         }
     }

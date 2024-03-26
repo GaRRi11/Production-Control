@@ -19,6 +19,9 @@ namespace Production_Controll
         public static Dictionary<TabPage, TabPageCityAssociation> tabPageCityAssociations = new Dictionary<TabPage, TabPageCityAssociation>();
         private static ProductService productService = new ProductService();
         private static CityService cityService = new CityService();
+        private static ProductGroupService productGroupService = new ProductGroupService();
+
+
 
         public static void ClearPanelAssociations(this Form form)
         {
@@ -78,6 +81,46 @@ namespace Production_Controll
             return null;
         }
 
+        public static void LoadExpirationDates(this Form form, ComboBox dateComboBox)
+        {
+            // Clear existing items in the dateComboBox
+            dateComboBox.Items.Clear();
+
+            // Add expiration date options
+            dateComboBox.Items.Add("None");
+            dateComboBox.Items.Add("1 month");
+            dateComboBox.Items.Add("2 months");
+            dateComboBox.Items.Add("3 months");
+
+            // Set "1 month" as the default selection
+            dateComboBox.SelectedIndex = 0;
+        }
+
+        public static void LoadProductGroups(this Form form, ComboBox groupComboBox)
+        {
+            // Clear existing items in the groupComboBox
+            groupComboBox.Items.Clear();
+
+            // Add "None" option
+            groupComboBox.Items.Add("None");
+
+            // Get all product groups
+            List<ProductGroup> productGroups = productGroupService.GetAllProductGroups();
+
+            if (productGroups != null)
+            {
+                // Add each product group to the groupComboBox
+                foreach (var group in productGroups)
+                {
+                    groupComboBox.Items.Add($"{group.Id} - {group.Name} - {group.PackagingType} - {group.Liter}");
+                }
+            }
+
+            // Set "None" as the default selection
+            groupComboBox.SelectedIndex = 0;
+        }
+
+
 
         public static TabPage CreateTabPage(this Form form, City city)
         {
@@ -132,84 +175,109 @@ namespace Production_Controll
             return label;
         }
 
-        public static void GenerateExcelForAll(this Form form, List<City> cities, List<Product> products)
+        public static void GenerateExcelForAll(this Form form, List<City> allCities, List<Product> allProducts)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+            // Create Excel package
             using (ExcelPackage excelPackage = new ExcelPackage())
             {
-                ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("ProductInfo");
+                // Add a new worksheet to the Excel package
+                ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("Products");
 
-                worksheet.Cells[1, 1].Value = "Product Name";
-                worksheet.Cells[1, 2].Value = "Last Modified";
-                worksheet.Cells[1, 3].Value = "Quantity";
-                worksheet.Cells[1, 4].Value = "City";
+                // Add column headers
+                worksheet.Cells[1, 1].Value = "Product ID";
+                worksheet.Cells[1, 2].Value = "Product Name";
+                worksheet.Cells[1, 3].Value = "City Name";
+                worksheet.Cells[1, 4].Value = "Product Group";
+                worksheet.Cells[1, 5].Value = "Expiration Date";
+                worksheet.Cells[1, 6].Value = "Price";
+                worksheet.Cells[1, 7].Value = "Quantity";
+                worksheet.Cells[1, 8].Value = "Last Modified";
 
-                int row = 2;
-
-                foreach (Product product in products)
+                // Populate data rows
+                int row = 2; // Start from the second row
+                foreach (var product in allProducts)
                 {
-                    string productName = product.name;
-                    string lastModified = product.lastModified.ToString();
-                    int quantity = product.quantity;
+                    // Find city name by city ID
+                    string cityName = allCities.FirstOrDefault(c => c.id == product.cityId)?.name;
 
-                    // Access the city information directly from the Product
-                    City productCity = cities.FirstOrDefault(city => city.id == product.cityId);
-                    string city = productCity != null ? productCity.name : $"Unknown City ({product.cityId})";
+                    // Find product group name by product group ID
+                    string productGroupName = productGroupService.GetNameById(product.productGroupId);
 
-                    worksheet.Cells[row, 1].Value = productName;
-                    worksheet.Cells[row, 2].Value = lastModified;
-                    worksheet.Cells[row, 3].Value = quantity;
-                    worksheet.Cells[row, 4].Value = city;
+                    // Write data to Excel worksheet
+                    worksheet.Cells[row, 1].Value = product.id;
+                    worksheet.Cells[row, 2].Value = product.name;
+                    worksheet.Cells[row, 3].Value = cityName;
+                    worksheet.Cells[row, 4].Value = productGroupName;
+                    worksheet.Cells[row, 5].Value = product.expirationDate.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 6].Value = product.price;
+                    worksheet.Cells[row, 7].Value = product.quantity;
+                    worksheet.Cells[row, 8].Value = product.lastModified;
 
-                    row++;
+                    row++; // Move to the next row
                 }
 
-                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string fileName = Path.Combine(desktopPath, "ProductInfo.xlsx");
-                System.IO.FileInfo excelFile = new System.IO.FileInfo(fileName);
-                excelPackage.SaveAs(excelFile);
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+
+                // Save Excel file
+                using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+                {
+                    saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
+                    saveFileDialog.FilterIndex = 1;
+                    saveFileDialog.RestoreDirectory = true;
+
+                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        FileInfo fi = new FileInfo(saveFileDialog.FileName);
+                        excelPackage.SaveAs(fi);
+                        MessageBox.Show("Excel file generated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
             }
         }
 
+
         public static void GenerateExcelForOne(this Form form, Product product, List<Modification> modifications)
         {
-
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
             using (ExcelPackage excelPackage = new ExcelPackage())
             {
                 ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("ProductModifications");
 
-                worksheet.Cells[1, 1].Value = "Product Name";
-                worksheet.Cells[1, 2].Value = "Operation Type";
-                worksheet.Cells[1, 3].Value = "Quantity Changed";
-                worksheet.Cells[1, 4].Value = "Date";
+                // Add column headers
+                worksheet.Cells[1, 1].Value = "Operation Type";
+                worksheet.Cells[1, 2].Value = "Quantity Changed";
+                worksheet.Cells[1, 3].Value = "Date";
+                worksheet.Cells[1, 4].Value = "Source City";
+                worksheet.Cells[1, 5].Value = "Target City";
 
-                int row = 2; 
+                int row = 2;
 
                 foreach (var modification in modifications)
                 {
-                    string productName = product.name;
-                    string operationType = modification.operation.ToString();
-                    int quantityChanged = modification.quantity;
-                    string date = modification.date.ToString("yyyy-MM-dd HH:mm:ss");
+                    // Get city names for source and target cities
+                    string sourceCityName = cityService.GetCityNameById(modification.SourceCityId);
+                    string targetCityName = cityService.GetCityNameById(modification.TargetCityId);
 
-                    worksheet.Cells[row, 1].Value = productName;
-                    worksheet.Cells[row, 2].Value = operationType;
-                    worksheet.Cells[row, 3].Value = quantityChanged;
-                    worksheet.Cells[row, 4].Value = date;
+                    // Populate the Excel worksheet with modification details
+                    worksheet.Cells[row, 1].Value = modification.operation.ToString();
+                    worksheet.Cells[row, 2].Value = modification.quantity;
+                    worksheet.Cells[row, 3].Value = modification.date.ToString("yyyy-MM-dd HH:mm:ss");
+                    worksheet.Cells[row, 4].Value = sourceCityName;
+                    worksheet.Cells[row, 5].Value = targetCityName;
 
                     row++;
                 }
 
+                // Save the Excel file
                 string productLabelName = product.name;
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 string fileName = Path.Combine(desktopPath, $"{productLabelName}_Modifications.xlsx");
                 System.IO.FileInfo excelFile = new System.IO.FileInfo(fileName);
                 excelPackage.SaveAs(excelFile);
-
-
             }
         }
 
